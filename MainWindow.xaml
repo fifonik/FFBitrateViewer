@@ -51,7 +51,7 @@
 
         <!-- ListViewItem ControlTemplate -->
         <!--
-            Re-defining it as we need drop-to indicator between items
+            Re-defining ListViewItem ControlTemplate as we need "drop to" indicator between items
             Styling it similar to default implementation: https://github.com/dotnet/wpf/blob/main/src/Microsoft.DotNet.Wpf/src/Themes/XAML/ListViewItem.xaml
         -->
         <Style x:Key="ListViewItemFocusVisual">
@@ -369,12 +369,12 @@
                     </ListView.View>
                 </ListView>
 
-                <!--This is the hidden helper Grid which does the resizing -->
+                <!-- This is the hidden helper Grid which does the resizing -->
                 <!-- https://stackoverflow.com/questions/10309249/listview-gridviewcolumn-width -->
                 <Grid Visibility="Hidden">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="{Binding ElementName=GridViewColCheckbox,  Path=ActualWidth}"/>
-                        <!--Width is set to "Fill"-->
+                        <!-- Width is set to "Fill" -->
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="{Binding ElementName=GridViewColMediaInfo, Path=ActualWidth}"/>
                         <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth}"/>
@@ -382,7 +382,6 @@
                         <!--Correction Width-->
                         <ColumnDefinition Width="10"/>
                     </Grid.ColumnDefinitions>
-                    <!--This is the hidden helper Field which is used to bind to, using the "Fill" column of the helper grid-->
                     <Grid Grid.Column="1" x:Name="helperField"/>
                 </Grid>
             </Grid>
@@ -443,11 +442,10 @@
                 <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='second', Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
                     <TextBlock Margin="-2,0,0,0" FontSize="14">Second based</TextBlock>
                 </RadioButton>
-                <!-- 
-                <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='GOP',    Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
+
+                <!-- RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='GOP',    Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
                     <TextBlock Margin="-2,0,0,0" FontSize="14">GOP based</TextBlock>
-                </RadioButton>
-                -->
+                </RadioButton -->
                 <CheckBox Margin="50,0,0,0" VerticalContentAlignment="Center" IsChecked="{Binding Path=IsAdjustStartTimeOnPlot, Mode=TwoWay}" ToolTip="Use file/stream start time to adjust frames start time on plot">
                     <TextBlock FontSize="14">Adjust frames start time</TextBlock>
                 </CheckBox>
