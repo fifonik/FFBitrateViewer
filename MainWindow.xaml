@@ -380,7 +380,7 @@
                         <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth}"/>
                         <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth}"/>
                         <!--Correction Width-->
-                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="20"/>
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="1" x:Name="helperField"/>
                 </Grid>

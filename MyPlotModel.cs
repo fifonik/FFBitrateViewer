@@ -270,6 +270,7 @@ namespace FFBitrateViewer
             {
                 Axes[index].Maximum         = (index == 0 ? 10 : 1);
                 Axes[index].AbsoluteMaximum = Axes[index].Maximum;
+                if(index == 0) Axes[index].StringFormat = AxisXStringFormatBuild(Axes[index].Maximum);
                 return true;
             }
             else
@@ -278,10 +279,17 @@ namespace FFBitrateViewer
                 {
                     Axes[index].Maximum         = (double)value;
                     Axes[index].AbsoluteMaximum = Axes[index].Maximum;
+                    if (index == 0) Axes[index].StringFormat = AxisXStringFormatBuild(Axes[index].Maximum);
                     return true;
                 }
             }
             return false;
+        }
+
+
+        public static string AxisXStringFormatBuild(double? duration)
+        {
+            return (duration == null || (double)duration < 60) ? "m:ss" : (((double)duration < 60 * 60) ? "mm:ss" : "h:mm:ss");
         }
 
 
