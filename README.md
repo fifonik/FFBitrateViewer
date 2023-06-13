@@ -2,8 +2,9 @@
 
 FFBitrateViewer is a FFProbe GUI that purpose is to visualize frames` bitrate extracted by FFProbe.
 It is inspired by [Bitrate Viewer](https://web.archive.org/web/20160730053853/http://www.winhoros.de/docs/bitrate-viewer/) by Konran Udo Gerber (the program's web-site and forum are long dead).
-FFBitrateViewer allows you to select multiple files without dealing with command line and get per/frame or per second info for all of them in one go.
-Well, and play with interactive graphs:
+FFBitrateViewer allows you to select multiple files without dealing with command line and get "per frame" or "per second info" for all of them in one go.
+
+Well, and play with interactive graphs (powered by OxyPlot):
 <p align="center"><img src="screenshots/screenshot.0.8.0.png" width="900"/></p>
 
 
@@ -22,10 +23,10 @@ Well, and play with interactive graphs:
 
 
 ## Requirements
-- Windows OS;
+- Windows OS
 - .NET 7.0 or later. The program should ask you to download and install it if required.
 - FFProbe.exe (a part of FFMpeg package). You have to download it from [official ffmpeg web site](https://ffmpeg.org/download.html).
-  You can use static build for simplicity (single file), however, for real usage I'd recommend to use shared build accessigne from %PATH%.
+  You can use sibgle file static build for simplicity, however, for real usage I'd recommend to make shared build accessible in %PATH%.
 
 
 ## How to use
