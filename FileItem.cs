@@ -1,4 +1,6 @@
+using OxyPlot;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -6,19 +8,18 @@ namespace FFBitrateViewer
 {
     public class FileItem : Bindable
     {
-        public BitRate?                            BitRateAvg              { get { return Get<BitRate?>(); }           private set { Set(value); } }
-        public BitRate?                            BitRateMax              { get { return Get<BitRate?>(); }           private set { Set(value); } }
+        public BitRate?                            BitRateAvg              { get { return Get<BitRate?>(); }       private set { Set(value); } }
+        public BitRate?                            BitRateMax              { get { return Get<BitRate?>(); }       private set { Set(value); } }
         public string?                             FS { // File Spec
             get { return Get<string?>(); }
             set {
                 Set(value);
                 IsExists    = !string.IsNullOrEmpty(value) && File.Exists(value);
                 FN          = Path.GetFileName(FS);
-                // todo@ why? OnPropertyChanged(nameof(FS));
             }
         }
         public string?                             FN                      { get { return Get<string?>();    }     private set { Set(value);  } } // File Name
-        public Frames                              Frames                  { get;                                  private set; } = new Frames();
+        private Frames                             Frames                  { get;                                  set; } = new Frames();
         public int?                                FramesCount             { get { return Get<int?>(); }           private set { Set(value); } }
         public int?                                DropTarget              { get { return Get<int?>(); }           set { Set(value); } } // 1 -- top, 2 - bottom
         public bool                                IsExists                { get { return Get<bool>();       }     private set { Set(value); OnPropertyChanged(nameof(IsExistsAndEnabled)); OnPropertyChanged(nameof(IsReady));  } }
@@ -36,6 +37,24 @@ namespace FFBitrateViewer
             if (!string.IsNullOrEmpty(fs)) FS = fs;
 
         }
+
+
+        private void BitRatesCalc()
+        {
+            var avg = Frames.BitRateAvgCalc();
+            BitRateAvg = (avg == null) ? null : new BitRate((int)avg);
+
+            var max = Frames.BitRateMaxCalc();
+            BitRateMax = (max == null) ? null : new BitRate((int)max);
+        }
+
+
+        public void FramesIsAdjustStartTimeSet(bool isAdjustStartTime) {
+            if (isAdjustStartTime == Frames.IsAdjustStartTime) return;
+            Frames.IsAdjustStartTimeSet(isAdjustStartTime);
+            BitRatesCalc();
+        }
+
 
         public void FramesClear()
         {
@@ -59,15 +78,29 @@ namespace FFBitrateViewer
                 }
             });
 
-            var bitrateAvg = Frames.GetBitRateAvg();
-            if (bitrateAvg != null) BitRateAvg  = new BitRate((int)bitrateAvg);
-
-            var bitrateMax = Frames.GetBitRateMax();
-            if (bitrateMax != null) BitRateMax = new BitRate((int)bitrateMax);
+            BitRatesCalc();
 
             FramesCount = Frames.Items.Count;
 
             IsDataLoading = false;
+        }
+
+
+        public List<DataPoint> FramesDataPointsGet(string? plotViewType)
+        {
+            return Frames.DataPointsGet(plotViewType);
+        }
+
+
+        public double? FramesDurationGet()
+        {
+            return Frames.DurationGet();
+        }
+
+
+        public int FramesMaxYGet(string? plotViewType)
+        {
+            return Frames.MaxYGet(plotViewType);
         }
 
 
@@ -85,7 +118,7 @@ namespace FFBitrateViewer
 
         public double? GetDuration()
         {
-            return Frames.GetDuration() ?? GetDurationFromStream() ?? GetDurationFile();
+            return Frames.DurationGet() ?? GetDurationFromStream() ?? GetDurationFile();
         }
 
 
@@ -100,12 +133,6 @@ namespace FFBitrateViewer
             return (MediaInfo?.Duration > 0) ? (MediaInfo.Duration - (MediaInfo?.StartTime ?? 0)) : null;
         }
 
-/*
-        public double GetPacketsOffset()
-        {
-            return (MediaInfo?.StartTime ?? 0) + (MediaInfo?.Video0?.StartTime ?? 0);
-        }
-*/
 
         public void MediaInfoClear()
         {

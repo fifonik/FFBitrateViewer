@@ -100,10 +100,8 @@ namespace FFBitrateViewer
 
         private void IsAdjustOffsetOnPlotUpdated()
         {
-            if (PlotModel == null || PlotViewType == null) return;
-            foreach(var file in Files) file.Frames.IsAdjustStartTime = IsAdjustStartTimeOnPlot;
+            foreach (var file in Files) file.FramesIsAdjustStartTimeSet(IsAdjustStartTimeOnPlot);
             PlotUpdate();
-
         }
 
 
@@ -150,7 +148,7 @@ namespace FFBitrateViewer
             if (!IsFileCanBeAdded(fs)) return false;
 
             var file = new FileItem(fs, enabled);
-            file.Frames.IsAdjustStartTime = IsAdjustStartTimeOnPlot;
+            file.FramesIsAdjustStartTimeSet(IsAdjustStartTimeOnPlot);
 
             Files.Add(file);
 
@@ -280,9 +278,9 @@ namespace FFBitrateViewer
 
                         if (PlotModel != null)
                         {
-                            PlotModel.SeriePointsAdd(idx, file.Frames.GetDataPoints(PlotViewType));
-                            PlotModel.AxisMaximumSet(0, file.Frames.GetDuration());
-                            PlotModel.AxisMaximumSet(1, file.Frames.GetMaxY(PlotViewType));
+                            PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
+                            PlotModel.AxisMaximumSet(0, file.FramesDurationGet());
+                            PlotModel.AxisMaximumSet(1, file.FramesMaxYGet(PlotViewType));
                             PlotModel.Redraw();
                         }
 
@@ -436,7 +434,7 @@ namespace FFBitrateViewer
                 if (!file.IsExistsAndEnabled) continue;
                 var x = file.GetDuration();
                 if (x != null && x > maxX) maxX = (double)x;
-                int? y = file.Frames.GetMaxY(PlotViewType);
+                int? y = file.FramesMaxYGet(PlotViewType);
                 if (y != null && y > maxY) maxY = (int)y;
             }
             if (maxX > 0 && PlotModel.AxisMaximumSet(0, maxX)) PlotModel.AxisRedraw(0);
@@ -496,10 +494,10 @@ namespace FFBitrateViewer
 
                 var x = file.GetDuration();
                 if (x != null && x > maxX) maxX = (double)x;
-                int? y = file.Frames.GetMaxY(PlotViewType);
+                int? y = file.FramesMaxYGet(PlotViewType);
                 if (y != null && y > maxY) maxY = (int)y;
 
-                PlotModel.SeriePointsAdd(idx, file.Frames.GetDataPoints(PlotViewType));
+                PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
             }
 
             if (maxX > 0 && PlotModel.AxisMaximumSet(0, maxX)) PlotModel.AxisRedraw(0);

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using OxyPlot;
+﻿using OxyPlot;
 using System.Collections.Generic;
 
 
@@ -79,7 +78,7 @@ namespace FFBitrateViewer
     public class Frames
     {
         private bool       isBitRateCalculated = false;
-        public bool        IsAdjustStartTime { get; set; } = true;
+        public bool        IsAdjustStartTime { get; private set; } = true;
         public List<Frame> Items             { get; set; } = new();
         public double      StartTime         { get; set; } = 0;
 
@@ -89,7 +88,7 @@ namespace FFBitrateViewer
             isForceOrder ??= !frame.IsOrdered;
             if (isForceOrder == true)
             {
-                var pos = FindPos(frame);
+                var pos = PosFind(frame);
                 Items.Insert(pos, frame);
                 return pos;
             }
@@ -108,7 +107,7 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> GetDataPoints(string? plotViewType)
+        public List<DataPoint> DataPointsGet(string? plotViewType)
         {
             var data      = new List<DataPoint>();
             var startTime = (IsAdjustStartTime ? StartTime : 0);
@@ -126,14 +125,21 @@ namespace FFBitrateViewer
         }
 
 
-        public double? GetDuration()
+        public double? DurationGet()
         {
             return Items.Count > 0 ? (Items[^1].StartTime + Items[^1].Duration - (IsAdjustStartTime ? StartTime : 0)) : null;
         }
 
 
+        public void IsAdjustStartTimeSet(bool isAdjustStartTime)
+        {
+            IsAdjustStartTime = isAdjustStartTime;
+            isBitRateCalculated = false;
+        }
+
+
         // todo@ cache
-        public int GetMaxY(string? plotViewType)
+        public int MaxYGet(string? plotViewType)
         {
             int value = 0;
             switch (plotViewType?.ToUpper() ?? "")
@@ -142,16 +148,16 @@ namespace FFBitrateViewer
                     foreach (var frame in Items) if (frame.Size > value) value = frame.Size;
                     break;
                 case "SECOND":
-                    value = GetBitRateMax() ?? 0;
+                    value = BitRateMaxCalc() ?? 0;
                     break;
             }
             return (int)double.Round(value / 1000);
         }
 
 
-        public int? GetBitRateAvg()
+        public int? BitRateAvgCalc()
         {
-            var d = GetDuration();
+            var d = DurationGet();
             if (d == null) return null;
             int value = 0;
             foreach (var frame in Items) value += frame.Size;
@@ -159,16 +165,16 @@ namespace FFBitrateViewer
         }
 
 
-        public int? GetBitRateMax()
+        public int? BitRateMaxCalc()
         {
-            int value = 0;
+            int value = -1;
             CalcBitRateFromItems(1, IsAdjustStartTime ? StartTime : 0);
             foreach (var frame in Items) if (frame.BitRate > value) value = (int)frame.BitRate;
-            return value;
+            return value >= 0 ? value : null;
         }
 
 
-        private int FindPos(Frame frame)
+        private int PosFind(Frame frame)
         {
             for (int idx = Items.Count - 1; idx >= 0; --idx)
             {
