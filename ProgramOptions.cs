@@ -29,13 +29,13 @@ namespace FFBitrateViewer
 
     public class ProgramOptions
     {
-        private static readonly char Separator = '|'; // For serializing lists (Metrics, Files)
+        private static readonly char Separator = '|'; // For serializing lists (Files)
 
         public bool?            AdjustStartTimeOnPlot { get; set; }
-        public bool?            LogCommands       { get; set; }
-        public string?          TempDir           { get; set; }
+        public bool?            LogCommands           { get; set; }
+        public string?          TempDir               { get; set; }
         //[JsonProperty("files")]
-        public List<FileItemPO> Files             { get; set; }
+        public List<FileItemPO> Files                 { get; set; }
 
         public ProgramOptions()
         {
@@ -69,7 +69,6 @@ namespace FFBitrateViewer
 
             return result;
         }
-
 
 
         public void SaveToSettings()
@@ -118,10 +117,10 @@ namespace FFBitrateViewer
 
     public class ArgsOptions : ProgramOptions
     {
-        public bool     IsFilled          { get { return Files.Count > 0; } }
-        public LogLevel LogLevel          { get; set; } = LogLevel.INFO;
-        public bool     Exit              { get; set; }
-        public bool     Run               { get; set; }
+        public bool     IsFilled { get { return Files.Count > 0; } }
+        public LogLevel LogLevel { get; set; } = LogLevel.INFO;
+        public bool     Exit     { get; set; }
+        public bool     Run      { get; set; }
 
         public ArgsOptions(string[] args) : base()
         {
