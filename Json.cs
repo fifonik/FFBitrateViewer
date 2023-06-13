@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Newtonsoft.Json;
 
 
@@ -11,22 +11,6 @@ namespace FFBitrateViewer
             // todo@ read from stream (as in IsValid)
             string? text = File.ReadAllText(fs);
             return JsonConvert.DeserializeObject<T>(text); // todo@ add options
-/*
-        //using System.Text.Json.Serialization;
-        //using System.Text.Json;
-        // PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        // DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-        // ReadCommentHandling = JsonCommentHandling.Skip,
-        // AllowTrailingCommas = true,
-        // ?PropertyNameCaseInsensitive = true,
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                DictionaryKeyPolicy  = JsonNamingPolicy.CamelCase,
-                AllowTrailingCommas  = true
-            };
-            return JsonSerializer.Deserialize<T>(json, options);
-*/
         }
 
 

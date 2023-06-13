@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -8,6 +8,12 @@
     <StartupObject>FFBitrateViewer.App</StartupObject>
     <Version>0.8.0.1</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <Description>FFBitrateViewer -- FFProbe GUI</Description>
+    <Copyright>Copyright © 2023 / Fifonik</Copyright>
+    <PackageProjectUrl>https://github.com/fifonik/FFBitrateViewer</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/fifonik/FFBitrateViewer</RepositoryUrl>
+    <Title>FFBitrateViewer -- FFProbe GUI</Title>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,6 +51,10 @@
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
