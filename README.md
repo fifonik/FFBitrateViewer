@@ -13,7 +13,8 @@ Well, and play with interactive graphs:
 - Easy to use UI: drag & drop files from Windows Explorer onto files list or use file chooser;
 - Graphs can be zoomed in/out with mouse wheel (try it over graph and/or axes), panned with right mouse button and saved as SVG or PNG;
 - FFProbe commands issued by FFBitrateViewer can be saved to log file (`FFBitrateViewer.log`);
-- Free and **[Open Source](LICENSE.txt)**. No registration, banners, tracking etc.
+- No registration, banners, tracking etc;
+- Free and **Open Source** ([MIT License](LICENSE.txt)).
 
 
 ## Latest version: 
