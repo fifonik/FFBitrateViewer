@@ -13,7 +13,7 @@
     <PackageProjectUrl>https://github.com/fifonik/FFBitrateViewer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/fifonik/FFBitrateViewer</RepositoryUrl>
-    <Title>FFBitrateViewer -- FFProbe GUI</Title>
+    <AssemblyTitle>FFBitrateViewer -- FFProbe GUI</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
