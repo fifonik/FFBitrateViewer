@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -65,6 +66,13 @@ namespace FFBitrateViewer
             Log.Init(new Logger(argsOptions.LogLevel, FileSpecBuild("log"), true/*append*/, true/*add timestamp*/, true/*auto flush*/), logCommands || argsOptions.LogLevel == LogLevel.DEBUG);
 
             Log.Write(LogLevel.DEBUG, "Started");
+
+            // To debug non-english culture
+            //CultureInfo ci = new CultureInfo("fr-FR");
+            //Thread.CurrentThread.CurrentCulture = ci;
+            //Thread.CurrentThread.CurrentUICulture = ci;
+
+            Log.Write(LogLevel.DEBUG, "System culture:" + Thread.CurrentThread.CurrentCulture.ToString());
 
             string fs = FileSpecBuild("conf");
             if (File.Exists(fs))

@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -61,12 +62,13 @@ namespace FFBitrateViewer
 
     public class FF
     {
-        private static readonly Regex VersionRegex        = new(@"^ff\S+\sversion\s+(.+)\sCopyright", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex VersionShortRegex   = new(@"^\D*(\d+\.\d+(?:\.\d+)?)",          RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-        public static readonly string Executable          = "ffprobe";
+        private static readonly NumberStyles      DoubleStyle       = NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign | NumberStyles.AllowLeadingWhite;
+        private static readonly Regex             VersionRegex      = new(@"^ff\S+\sversion\s+(.+)\sCopyright", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+        private static readonly Regex             VersionShortRegex = new(@"^\D*(\d+\.\d+(?:\.\d+)?)",          RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+        public static readonly string             Executable        = "ffprobe";
 
-        public static string? FramesInfoTemplate { get; set; }
-        public static int?    FramesInfoTimeout  { get; set; }
+        public static string? FramesInfoTemplate  { get; set; }
+        public static int?    FramesInfoTimeout   { get; set; }
         public static string? MediaInfoTemplate   { get; set; }
         public static int?    MediaInfoTimeout    { get; set; }
         public static string? VersionInfoTemplate { get; set; }
@@ -226,7 +228,7 @@ namespace FFBitrateViewer
                     }
                     break;
                 case 'd':
-                    if (double.TryParse(value, out double d))
+                    if (double.TryParse(value, DoubleStyle, CultureInfo.InvariantCulture, out double d))
                     {
                         o.SetProperty(info.Name, d);
                         return true;
