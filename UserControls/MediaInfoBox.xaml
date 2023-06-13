@@ -1,0 +1,130 @@
+<UserControl
+    x:Class="FFBitrateViewer.UserControls.MediaInfoBox"
+    x:Name="parent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:project="clr-namespace:FFBitrateViewer"
+    mc:Ignorable="d"
+    d:DesignHeight="400"
+    d:DesignWidth="400"
+>
+    <UserControl.Resources>
+        <project:MediaInfoBitRateConverter           x:Key="MediaInfoBitRate" />
+        <project:MediaInfoColorSpaceFullConverter    x:Key="MediaInfoColorSpaceFull" />
+        <project:MediaInfoColorRangeConverter        x:Key="MediaInfoColorRange" />
+        <project:MediaInfoDurationConverter          x:Key="MediaInfoDuration" />
+        <project:MediaInfoFileBitRateConverter       x:Key="MediaInfoFileBitRate" />
+        <project:MediaInfoFileDurationConverter      x:Key="MediaInfoFileDuration" />
+        <project:MediaInfoFileStartConverter         x:Key="MediaInfoFileStart" />
+        <project:MediaInfoStreamBitRateConverter     x:Key="MediaInfoStreamBitRate" />
+        <project:MediaInfoStreamDurationConverter    x:Key="MediaInfoStreamDuration" />
+        <project:MediaInfoStreamStartConverter         x:Key="MediaInfoStreamStart" />
+        <project:MediaInfoFieldTypeConverter         x:Key="MediaInfoFieldType" />
+        <project:MediaInfoFramesCountConverter       x:Key="MediaInfoFramesCount" />
+        <project:MediaInfoFrameRateConverter         x:Key="MediaInfoFrameRate" />
+        <project:MediaInfoResolutionConverter        x:Key="MediaInfoResolution" />
+        <project:MediaInfoStreamsInfoConverter       x:Key="MediaInfoStreamsInfo" />
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical" DataContext="{Binding ElementName=parent}">
+        <StackPanel.Resources>
+            <Style TargetType="Label">
+                <Setter Property="Padding" Value="2,2,0,2" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="Width" Value="90" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <!-- <Setter Property="FontFamily" Value="Consolas" /> -->
+            </Style>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="Padding" Value="2" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="Black" />
+                <!-- <Setter Property="FontFamily" Value="Consolas" /> -->
+            </Style>
+        </StackPanel.Resources>
+
+        <GroupBox Margin="2,0,2,5">
+            <GroupBox.Header>
+                <TextBlock FontSize="14" FontWeight="DemiBold">File</TextBlock>
+            </GroupBox.Header>
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoStreamsInfo}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Start:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFileStart}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Duration:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFileDuration}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Bit rate:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFileBitRate}}"/>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Margin="2,5,2,5">
+            <GroupBox.Header>
+                <TextBlock FontSize="14" FontWeight="DemiBold">Video Stream</TextBlock>
+            </GroupBox.Header>
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <Label Content="Frames count:"></Label>
+                    <TextBlock Text="{Binding Path=FramesCount, Mode=OneWay, Converter={StaticResource MediaInfoFramesCount}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Frame rate:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFrameRate}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Start:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoStreamStart}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Duration:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoStreamDuration}}"/>
+                </DockPanel>
+                <DockPanel>
+                    <Label Content="Bit rate:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoStreamBitRate}}"/>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Margin="2,5,2,5">
+            <GroupBox.Header>
+                <TextBlock FontSize="14" FontWeight="DemiBold">Frame</TextBlock>
+            </GroupBox.Header>
+            <StackPanel Orientation="Vertical">
+                <DockPanel>
+                    <Label Content="Size:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoResolution}}"/>
+                </DockPanel>
+
+                <DockPanel>
+                    <Label Content="Field type:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFieldType}}"/>
+                </DockPanel>
+
+                <DockPanel>
+                    <Label Content="Colour space:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoColorSpaceFull}}"/>
+                </DockPanel>
+
+                <DockPanel>
+                    <Label Content="Colour range:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoColorRange}}"/>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+
+    </StackPanel>
+</UserControl>

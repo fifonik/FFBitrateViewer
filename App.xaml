@@ -1,0 +1,86 @@
+<Application x:Class="FFBitrateViewer.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:FFBitrateViewer"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ControlTemplate x:Key="AnalysisIcon">
+            <Frame Source="Icons/Analysis_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="AnalyzeTraceIcon">
+            <Frame Source="Icons/AnalyzeTrace_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="CleanDataIcon">
+            <Frame Source="Icons/CleanData_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="CopyThemeIcon">
+            <Frame Source="Icons/CopyTheme_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="DeleteAllRowsIcon">
+            <Frame Source="Icons/DeleteAllRows_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="DeleteTableRowIcon">
+            <Frame Source="Icons/DeleteTableRow_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ExitIcon">
+            <Frame Source="Icons/Exit_16x.xaml" Width="16" Height="16" />
+        </ControlTemplate>
+        <ControlTemplate x:Key="ExportPerformanceReportIcon">
+            <Frame Source="Icons/ExportPerformanceReport_16x.xaml" Width="16" Height="16" />
+        </ControlTemplate>
+        <ControlTemplate x:Key="ExportToExcelIcon">
+            <Frame Source="Icons/ExportToExcel_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ImportThemeIcon">
+            <Frame Source="Icons/ImportTheme_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="NewFileCollectionIcon">
+            <Frame Source="Icons/NewFileCollection_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="OpenFileIcon">
+            <Frame Source="Icons/OpenFolder_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="OpenFileFromProjectIcon">
+            <Frame Source="Icons/OpenFileFromProject_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="OpenFolderIcon">
+            <Frame Source="Icons/FolderOpened_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="OptionsWriteFFMpegCommandsToLogIcon">
+            <Frame Source="Icons/PerformanceLog_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="OptionsScalingMethodIcon">
+            <Frame Source="Icons/ImageScale_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ResultToCSVIcon">
+            <Frame Source="Icons/ResultToCSV_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ResultToSpreadsheetIcon">
+            <Frame Source="Icons/ResultToSpreadsheet_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="RefreshIcon">
+            <Frame Source="Icons/Refresh_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="SaveIcon">
+            <Frame Source="Icons/Save_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="SaveAllIcon">
+            <Frame Source="Icons/SaveAll_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="StartIcon">
+            <Frame Source="Icons/Run_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="StatisticsWarningIcon">
+            <Frame Source="Icons/StatisticsWarning_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="SaveAsIcon">
+            <Frame Source="Icons/SaveAs_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="StopIcon">
+            <Frame Source="Icons/Stop_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
+        <ControlTemplate x:Key="GenericChartIcon">
+            <Frame Source="Icons/GenericChart_16x.xaml" Width="16" Height="16" />
+        </ControlTemplate>
+    </Application.Resources>
+</Application>
