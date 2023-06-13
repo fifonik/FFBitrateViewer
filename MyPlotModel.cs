@@ -270,7 +270,7 @@ namespace FFBitrateViewer
             {
                 Axes[index].Maximum         = (index == 0 ? 10 : 1);
                 Axes[index].AbsoluteMaximum = Axes[index].Maximum;
-                if(index == 0) Axes[index].StringFormat = AxisXStringFormatBuild(Axes[index].Maximum);
+                if (index == 0) AxisXStringFormatSet();
                 return true;
             }
             else
@@ -279,7 +279,7 @@ namespace FFBitrateViewer
                 {
                     Axes[index].Maximum         = (double)value;
                     Axes[index].AbsoluteMaximum = Axes[index].Maximum;
-                    if (index == 0) Axes[index].StringFormat = AxisXStringFormatBuild(Axes[index].Maximum);
+                    if (index == 0) AxisXStringFormatSet();
                     return true;
                 }
             }
@@ -290,6 +290,12 @@ namespace FFBitrateViewer
         public static string AxisXStringFormatBuild(double? duration)
         {
             return (duration == null || (double)duration < 60) ? "m:ss" : (((double)duration < 60 * 60) ? "mm:ss" : "h:mm:ss");
+        }
+
+
+        public void AxisXStringFormatSet()
+        {
+            Axes[0].StringFormat = AxisXStringFormatBuild(Axes[0].Maximum);
         }
 
 
@@ -318,9 +324,9 @@ namespace FFBitrateViewer
         {
             return (plotType?.ToUpper() ?? "") switch
             {
-                "SECOND" => "Bit rate",
-                "GOP"    => "Bit rate",
                 "FRAME"  => "Frame size",
+                "GOP"    => "Bit rate",
+                "SECOND" => "Bit rate",
                 _        => ""
             };
         }
@@ -330,9 +336,9 @@ namespace FFBitrateViewer
         {
             return (plotType?.ToUpper() ?? "") switch
             {
-                "SECOND" => "kb/s",
-                "GOP"    => "kb/GOP",
                 "FRAME"  => "kb",
+                "GOP"    => "kb/GOP",
+                "SECOND" => "kb/s",
                 _        => null
             };
         }

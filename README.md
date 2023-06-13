@@ -11,7 +11,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 ## Features
 - Processing up to 12 files in one go;
 - Brief media info for all files (hover mouse over media info to see more details);
-- Easy to use UI: drag & drop files from Windows Explorer onto files list or use file chooser;
+- Easy to use UI: files can be added with file chooser or dropped from Windows Explorer, files can be re-ordered using Drag & Drop;
 - Graphs can be zoomed in/out with mouse wheel (try it over graph and/or axes), panned with right mouse button and saved as SVG or PNG;
 - FFProbe commands issued by FFBitrateViewer can be saved to log file (`FFBitrateViewer.log`);
 - No registration, banners, tracking etc;
