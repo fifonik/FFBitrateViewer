@@ -1,6 +1,6 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -164,7 +164,7 @@ namespace FFBitrateViewer
 
         public override string ToString()
         {
-            return Value.ToString() + " " + Unit;
+            return Value.ToString(CultureInfo.InvariantCulture) + " " + Unit;
         }
 
         public double ToDouble()
@@ -378,10 +378,11 @@ namespace FFBitrateViewer
             }
         }
 
+
         public override string? ToString() {
             var d = ToDouble();
             if (d == null) return null;
-            return RemoveZeroes.Replace(string.Format("{0:0.000}", d), "");
+            return RemoveZeroes.Replace(((double)d).ToString("0.000", CultureInfo.InvariantCulture), "");
         }
         public double? ToDouble() { return Numerator > 0 && Denominator > 0 ? (double)Numerator / Denominator : null; }
     }
