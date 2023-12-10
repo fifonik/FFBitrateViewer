@@ -159,8 +159,8 @@ namespace FFBitrateViewer
         {
             var d = DurationGet();
             if (d == null) return null;
-            int value = 0;
-            foreach (var frame in Items) value += frame.Size;
+            ulong value = 0;
+            foreach (var frame in Items) value += (ulong)frame.Size;
             return (int)double.Round(value / (double)d * 8);
         }
 
