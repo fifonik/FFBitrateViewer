@@ -51,7 +51,4 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 ## Author
 fifonik
-
-
-## Support me if you like the program
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fifonik)
