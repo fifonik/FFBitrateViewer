@@ -51,4 +51,5 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 ## Author
 fifonik
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fifonik)
