@@ -1,8 +1,8 @@
-## FFBitrateViewer ó yet another program for video file bitrate visualization
+## FFBitrateViewer ‚Äî yet another program for video file bitrate visualization
 
 FFBitrateViewer is a FFProbe GUI that purpose is to visualize frames` bitrate extracted by FFProbe.
 It is inspired by [Bitrate Viewer](https://web.archive.org/web/20160730053853/http://www.winhoros.de/docs/bitrate-viewer/) (link to Web Archive as the program's web-site and forum are long dead).
-FFBitrateViewer allows you to select multiple files without dealing with command line and get ìper frameî or ìper secondî info for all of them in one go.
+FFBitrateViewer allows you to select multiple files without dealing with command line and get ‚Äúper frame‚Äù or ‚Äúper second‚Äù info for all of them in one go.
 
 Well, and play with interactive graphs (powered by OxyPlot):
 <p align="center"><img src="screenshots/screenshot.0.8.0.png" width="900"/></p>
@@ -35,14 +35,14 @@ Well, and play with interactive graphs (powered by OxyPlot):
 - Put FFProbe.exe (and accompanied dll files if you use shared build) into the program folder or make it available through system %PATH%;
 - Run the program;
 - Use UI to add files;
-- Click ìStartî button.
+- Click ‚ÄúStart‚Äù button.
 
 
 ## Troubleshooting
 - Close FFBitrateViewer and delete `FFBitrateViewer.log`;
 - Run the program with option `-log-level=debug`;
 - Add file;
-- Click ìStartî button;
+- Click ‚ÄúStart‚Äù button;
 - Take screenshot (Alt+PrnScr or Win+Shift+S and paste it into image editor and save as PNG);
 - Close the program;
 - Analyze `FFBitrateViewer.log`. You can try to run the ffprobe command directly;
@@ -51,3 +51,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 ## Author
 fifonik
+
+
+## Support me if you like the program
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fifonik)
