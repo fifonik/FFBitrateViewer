@@ -25,7 +25,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 ## Requirements
 - Windows OS
-- .NET 7.0 or later. The program should ask you to download and install it if required.
+- .NET 7.0. The program should ask you to download and install it if required.
 - FFProbe.exe (a part of FFMpeg package). You have to download it from [official ffmpeg web site](https://ffmpeg.org/download.html).
   You can use sibgle file static build for simplicity, however, for real usage I'd recommend to make shared build accessible in %PATH%.
 
