@@ -20,7 +20,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 
 ## Latest version: 
-- Latest Beta: [0.8.0 beta 2](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.8.0-beta.2)
+- Latest Beta: [0.9.0 beta 1](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.9.0-beta.1)
 
 
 ## Requirements
