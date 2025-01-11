@@ -2,13 +2,14 @@
 
 FFBitrateViewer is a FFProbe GUI that purpose is to visualize frames` bitrate extracted by FFProbe.
 It is inspired by [Bitrate Viewer](https://web.archive.org/web/20160730053853/http://www.winhoros.de/docs/bitrate-viewer/) (link to Web Archive as the program's web-site and forum are long dead).
-FFBitrateViewer allows you to select multiple files without dealing with command line and get “per frame” or “per second” info for all of them in one go.
+FFBitrateViewer allows you to select multiple files without dealing with command line and get “per frame”, “per second” or “per GOP” info for all of them in one go.
 
 Well, and play with interactive graphs (powered by OxyPlot):
 <p align="center"><img src="screenshots/screenshot.0.9.0.png" width="900"/></p>
 
 
 ## Features
+- “Per frame”, “per second” or “per GOP” graphs
 - Processing up to 12 files in one go;
 - Brief media info for all files (hover mouse over media info to see more details);
 - Easy to use UI: files can be added with file chooser or dropped from Windows Explorer, files can be re-ordered using Drag & Drop;
