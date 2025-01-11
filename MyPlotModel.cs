@@ -6,6 +6,23 @@ using System.Collections.Generic;
 
 namespace FFBitrateViewer
 {
+    /*
+    public class CustomDataPoint : IDataPointProvider
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public string  FrameType { get; set; }
+        public DataPoint GetDataPoint() => new(X, Y);
+
+        public CustomDataPoint(double x, double y)
+        {
+            X = x;
+            Y = y;
+            FrameType = "X";
+        }
+    }
+    */
+
     public class SerieStyle
     {
         public OxyColor     Color       = OxyColors.Black;
@@ -192,7 +209,7 @@ namespace FFBitrateViewer
         {
             Name         = name;
             PlotViewType = "frame";
-            PlotMargins  = new OxyThickness(45, 0, 8, 35);
+            PlotMargins  = new OxyThickness(45, 10, 8, 35);
 
             // Setting white background as with transparent (default) image cannot be copied to Clipboard bacause of WPF bug: https://github.com/oxyplot/oxyplot/issues/17
             Background = OxyColors.White;
@@ -234,6 +251,7 @@ namespace FFBitrateViewer
             {
                 AbsoluteMaximum    = 1, // Will be adjusted automatically while getting data
                 AbsoluteMinimum    = 0,
+                Angle              = -90,
                 Maximum            = 1, // Will be adjusted automatically while getting data
                 Minimum            = 0,
                 MaximumPadding     = 0,
@@ -244,8 +262,7 @@ namespace FFBitrateViewer
                 MajorGridlineStyle = LineStyle.Solid,
                 MinorGridlineColor = OxyColor.FromArgb(20, 0, 0, 139),
                 MinorGridlineStyle = LineStyle.Dot,
-                Position           = AxisPosition.Left,
-                Angle              = 270
+                Position           = AxisPosition.Left
             });
 
             // Customizing controller to show Graph ToolTip on mouse hover instead of mouse click
@@ -336,11 +353,24 @@ namespace FFBitrateViewer
         {
             return (plotType?.ToUpper() ?? "") switch
             {
-                "FRAME"  => "kb",
+                "FRAME"  => "kB",
                 "GOP"    => "kb/GOP",
                 "SECOND" => "kb/s",
                 _        => null
             };
+        }
+
+
+        public static string? AxisYAdditionalInfo(string? plotType)
+        {
+            switch (plotType?.ToUpper())
+            {
+                case "FRAME":
+                    {
+                        return System.Environment.NewLine + "Frame type={FrameType}";
+                    }
+            }
+            return null;
         }
 
 
@@ -462,7 +492,11 @@ namespace FFBitrateViewer
 
         private string TrackerFormatStringBuild()
         {
-            return "{0}" + System.Environment.NewLine + "Time={2:hh\\:mm\\:ss\\.fff}" + System.Environment.NewLine + "{3}={4:0} " + AxisYUnitBuild(PlotViewType);
+            return "{0}"
+                + System.Environment.NewLine + "Time={2:hh\\:mm\\:ss\\.fff}"
+                + System.Environment.NewLine + "{3}={4:0} " + AxisYUnitBuild(PlotViewType)
+                //+ AxisYAdditionalInfo(PlotViewType)
+            ;
         }
 
 

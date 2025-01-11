@@ -22,12 +22,12 @@ namespace FFBitrateViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ArgsOptions? argsOptions;
-        private int? dragFileSrcIndex = null;
-        private ProgramConfig? programConfig;
-        private ProgramOptions? programOptions;
-        private Point startPoint = new();
-        public  MainViewModel vm;
+        private ArgsOptions     argsOptions      = new(Environment.GetCommandLineArgs());
+        private int?            dragFileSrcIndex = null;
+        private ProgramConfig   programConfig    = new();
+        private ProgramOptions  programOptions   = new();
+        private Point           startPoint       = new();
+        public  MainViewModel   vm;
 
         public MainWindow()
         {
@@ -39,7 +39,7 @@ namespace FFBitrateViewer
 
             vm = new MainViewModel
             {
-                IsAutoRun = argsOptions?.IsFilled == true && argsOptions?.Run == true
+                IsAutoRun = argsOptions.IsFilled && argsOptions.Run
             };
             DataContext = vm;
 
@@ -49,11 +49,9 @@ namespace FFBitrateViewer
 
         private void Initialize()
         {
-            argsOptions = new ArgsOptions(Environment.GetCommandLineArgs());
             bool logCommands;
             if (argsOptions.IsFilled)
             {
-                programOptions = new ProgramOptions();
                 logCommands = argsOptions.LogCommands == true;
             }
             else
@@ -61,7 +59,7 @@ namespace FFBitrateViewer
                 programOptions = ProgramOptions.LoadFromSettings();
                 logCommands = programOptions.LogCommands == true;
             }
-            if (!string.IsNullOrEmpty(argsOptions.TempDir)) Global.TempDir = argsOptions.TempDir;
+            if (!string.IsNullOrEmpty(argsOptions.TempDir)) Global.SetTempDir(argsOptions.TempDir);
 
             Log.Init(new Logger(argsOptions.LogLevel, FileSpecBuild("log"), true/*append*/, true/*add timestamp*/, true/*auto flush*/), logCommands || argsOptions.LogLevel == LogLevel.DEBUG);
 
@@ -80,7 +78,7 @@ namespace FFBitrateViewer
                 try
                 {
                     programConfig = ProgramConfig.LoadFromFile(fs);
-                    if (!string.IsNullOrEmpty(programConfig.TempDir) && string.IsNullOrEmpty(argsOptions?.TempDir)) Global.TempDir = programConfig.TempDir;
+                    if (!string.IsNullOrEmpty(programConfig.TempDir) && string.IsNullOrEmpty(argsOptions?.TempDir)) Global.SetTempDir(programConfig.TempDir);
                 }
                 catch (Exception ex)
                 {
@@ -88,7 +86,6 @@ namespace FFBitrateViewer
                     Log.Close();
                 }
             }
-            programConfig ??= new ProgramConfig();
             FF.Init(programConfig);
 
             /*
@@ -227,15 +224,29 @@ namespace FFBitrateViewer
 
         private void ImageFileSaveDialog(string title, Action<string> fnSave, string? fs = null)
         {
-            string ext = string.IsNullOrEmpty(fs) ? "png" : Path.GetExtension(fs).TrimStart('.');
+            string ext = string.IsNullOrEmpty(fs) ? "png" : Path.GetExtension(fs).TrimStart('.').ToLower();
             var filter = "PNG files|*.png|SVG files|*.svg|All files|*.*";
+            var filterIndex = 1;
+            var parts = filter.Split("|");
+            var index = 1;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i % 2 == 0) continue; // Ignore filter labels such as "PNG Files"
+                if (parts[i][^ext.Length..].ToLower() == ext)
+                {
+                    filterIndex = index;
+                    break;
+                }
+                ++index;
+            }
             var dlg = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = filter,
+                Filter           = filter,
                 RestoreDirectory = true,
-                OverwritePrompt = true,
-                DefaultExt = ext,
-                Title = title
+                OverwritePrompt  = true,
+                FilterIndex      = filterIndex,
+                DefaultExt       = ext,
+                Title            = title
             };
             if (!string.IsNullOrEmpty(fs)) dlg.FileName = Path.GetFileName(fs);
 
@@ -257,7 +268,7 @@ namespace FFBitrateViewer
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Video Files|*.264;*.avi;*.avs;*.h264;*.hevc;*.m2ts;*.mkv;*.mov;*.mp4;*.mpeg;*.mpg;*.mts;*.mxf;*.ts;*.webm|All files|*.*",
+                Filter =  "Video Files|" + programConfig.VideoFilesList + "|All files|*.*",
                 RestoreDirectory = true,
                 Multiselect = multiple,
                 Title = title
@@ -265,8 +276,14 @@ namespace FFBitrateViewer
 
             if (dlg.ShowDialog() == true)
             {
-                if (multiple) foreach (var filename in dlg.FileNames) if (!string.IsNullOrEmpty(filename)) vm.FileAdd(filename);
-                        else vm.FileAdd(dlg.FileName);
+                if (multiple)
+                {
+                    foreach (var filename in dlg.FileNames) if (!string.IsNullOrEmpty(filename)) vm.FileAdd(filename);
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(dlg.FileName)) vm.FileAdd(dlg.FileName);
+                }
             }
         }
 

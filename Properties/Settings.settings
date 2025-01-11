@@ -11,5 +11,8 @@
     <Setting Name="AdjustStartTimeOnPlot" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="PlotViewType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">frame</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

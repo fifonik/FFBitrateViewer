@@ -9,7 +9,9 @@ namespace FFBitrateViewer
     public class FileItem : Bindable
     {
         public BitRate?                            BitRateAvg              { get { return Get<BitRate?>(); }       private set { Set(value); } }
+        public BitRate?                            BitRateAvg2             { get { return Get<BitRate?>(); }       private set { Set(value); } }
         public BitRate?                            BitRateMax              { get { return Get<BitRate?>(); }       private set { Set(value); } }
+        public BitRate?                            BitRateMin              { get { return Get<BitRate?>(); }       private set { Set(value); } }
         public string?                             FS { // File Spec
             get { return Get<string?>(); }
             set {
@@ -41,11 +43,10 @@ namespace FFBitrateViewer
 
         private void BitRatesCalc()
         {
-            var avg = Frames.BitRateAvgCalc();
-            BitRateAvg = (avg == null) ? null : new BitRate((int)avg);
-
-            var max = Frames.BitRateMaxCalc();
-            BitRateMax = (max == null) ? null : new BitRate((int)max);
+            var bitRates = Frames.BitRatesCals();
+            BitRateAvg = bitRates.Avg;
+            BitRateMax = bitRates.Max;
+            BitRateMin = bitRates.Min;
         }
 
 
@@ -65,22 +66,24 @@ namespace FFBitrateViewer
         }
 
 
-        public void FramesGet(CancellationToken cancellationToken, Action<int?, Frame>? action = null)
+        public void FramesGet(CancellationToken cancellationToken, Action<int?, Frame, int>? action = null)
         {
             if (string.IsNullOrEmpty(FS)) return;
             IsDataLoading = true;
 
+            int lineNo = 0;
             FF.FramesGet(FS, cancellationToken, o => {
+                lineNo++;
                 if (o is Frame frame)
                 {
                     var pos = Frames.Add(frame);
-                    action?.Invoke(pos, frame);
+                    action?.Invoke(pos, frame, lineNo);
                 }
             });
 
             BitRatesCalc();
 
-            FramesCount = Frames.Items.Count;
+            FramesCount = Frames.FramesCount;
 
             IsDataLoading = false;
         }
@@ -92,9 +95,9 @@ namespace FFBitrateViewer
         }
 
 
-        public double? FramesDurationGet()
+        public double? FramesMaxXGet(string? plotViewType)
         {
-            return Frames.DurationGet();
+            return Frames.MaxXGet(plotViewType);
         }
 
 
@@ -118,7 +121,7 @@ namespace FFBitrateViewer
 
         public double? GetDuration()
         {
-            return Frames.DurationGet() ?? GetDurationFromStream() ?? GetDurationFile();
+            return Frames.Duration ?? GetDurationFromStream() ?? GetDurationFile();
         }
 
 

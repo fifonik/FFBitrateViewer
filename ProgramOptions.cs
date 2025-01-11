@@ -33,6 +33,7 @@ namespace FFBitrateViewer
 
         public bool?            AdjustStartTimeOnPlot { get; set; }
         public bool?            LogCommands           { get; set; }
+        public string?          PlotViewType          { get; set; }
         public string?          TempDir               { get; set; }
         //[JsonProperty("files")]
         public List<FileItemPO> Files                 { get; set; }
@@ -52,6 +53,7 @@ namespace FFBitrateViewer
             }
             if (options.AdjustStartTimeOnPlot != null) AdjustStartTimeOnPlot = options.AdjustStartTimeOnPlot;
             if (options.LogCommands != null)           LogCommands           = options.LogCommands;
+            if (options.PlotViewType != null)          PlotViewType = options.PlotViewType;
         }
 
 
@@ -63,6 +65,8 @@ namespace FFBitrateViewer
 
             result.AdjustStartTimeOnPlot = string.Equals(source[nameof(AdjustStartTimeOnPlot)]?.ToString(), "True", StringComparison.OrdinalIgnoreCase);
             result.LogCommands           = string.Equals(source[nameof(LogCommands)]?.ToString(), "True", StringComparison.OrdinalIgnoreCase);
+            var plotViewType             = NormalizePlotViewType(source[nameof(PlotViewType)].ToString());
+            if (!string.IsNullOrEmpty(plotViewType)) result.PlotViewType = plotViewType;
 
             result.Files.Clear();
             result.Files.AddRange(FilesDeserialize(source[nameof(Files)]?.ToString()));
@@ -77,6 +81,7 @@ namespace FFBitrateViewer
 
             target[nameof(AdjustStartTimeOnPlot)] = AdjustStartTimeOnPlot == true;
             target[nameof(LogCommands)]           = LogCommands == true;
+            target[nameof(PlotViewType)]          = PlotViewType;
 
             target[nameof(Files)]                 = FilesSerialize(Files);
 
@@ -103,7 +108,22 @@ namespace FFBitrateViewer
             return result;
         }
 
+
+        protected static string? NormalizePlotViewType(string? value)
+        {
+            value = string.IsNullOrEmpty(value) ? null : value.ToLower();
+            switch (value)
+            {
+                case "frame":
+                case "second":
+                    return value;
+                case "gop":
+                    return "GOP";
+            }
+            return null;
+        }
     }
+
 
 
     // FFBitrateViewer.exe
@@ -111,6 +131,7 @@ namespace FFBitrateViewer
     // [-exit]
     // [-log-commands]
     // [-log-level=(DEBUG|ERROR|INFO|WARNING)]
+    // [-plot-view-type=(frame|second|gop)]
     // [-run]
     // [-temp-dir=<dirspec>]
     // /path/to/file1.mp4 [/path/to/file2.mp4] [...]
@@ -149,12 +170,15 @@ namespace FFBitrateViewer
                     case "ADJUST-START-TIME-ON-PLOT":
                         AdjustStartTimeOnPlot = bvalue;
                         continue;
+
                     case "EXIT":
                         Exit = bvalue;
                         continue;
+
                     case "LOG-COMMANDS":
                         LogCommands = bvalue;
                         continue;
+
                     case "LOG-LEVEL":
                         if (!string.IsNullOrEmpty(svalue))
                         {
@@ -176,9 +200,20 @@ namespace FFBitrateViewer
                         }
                         // todo@ warning?
                         break;
+
+                    case "PLOT-VIEW-TYPE":
+                        var plotViewType = NormalizePlotViewType(svalue);
+                        if (!string.IsNullOrEmpty(plotViewType))
+                        {
+                            PlotViewType = plotViewType;
+                            continue;
+                        }
+                        break; // warning?
+
                     case "RUN":
                         Run = bvalue;
                         continue;
+
                     case "TEMP-DIR":
                         if (!string.IsNullOrEmpty(svalue))
                         {

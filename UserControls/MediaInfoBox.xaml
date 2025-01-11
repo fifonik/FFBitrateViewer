@@ -20,7 +20,7 @@
         <project:MediaInfoFileStartConverter         x:Key="MediaInfoFileStart" />
         <project:MediaInfoStreamBitRateConverter     x:Key="MediaInfoStreamBitRate" />
         <project:MediaInfoStreamDurationConverter    x:Key="MediaInfoStreamDuration" />
-        <project:MediaInfoStreamStartConverter         x:Key="MediaInfoStreamStart" />
+        <project:MediaInfoStreamStartConverter       x:Key="MediaInfoStreamStart" />
         <project:MediaInfoFieldTypeConverter         x:Key="MediaInfoFieldType" />
         <project:MediaInfoFramesCountConverter       x:Key="MediaInfoFramesCount" />
         <project:MediaInfoFrameRateConverter         x:Key="MediaInfoFrameRate" />

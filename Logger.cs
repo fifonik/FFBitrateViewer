@@ -23,6 +23,7 @@ namespace FFBitrateViewer
         private readonly bool       Append;
         private readonly bool       AutoFlush;
         private bool                IsOpened = false;
+        private bool                IsDisabled = false;
         private readonly LogLevel   MinLevel;
 
 
@@ -48,8 +49,15 @@ namespace FFBitrateViewer
         }
 
 
-        public bool Open(string? fs = null)
+        public void Disable()
         {
+            IsDisabled = true;
+        }
+
+
+       public bool Open(string? fs = null)
+        {
+            if (IsDisabled) return false;
             if (!string.IsNullOrEmpty(fs))
             {
                 FS = fs;
@@ -66,8 +74,9 @@ namespace FFBitrateViewer
 
         public void Log(LogLevel level, string line)
         {
+            if (IsDisabled) return;
 #if DEBUG
-            if(level == LogLevel.DEBUG) Debug.WriteLine("DEBUG: " + line);
+            if (level == LogLevel.DEBUG) Debug.WriteLine("DEBUG: " + line);
 #endif
             if (level < MinLevel) return;
 
@@ -120,6 +129,7 @@ namespace FFBitrateViewer
             if (AutoFlush) Stream?.Flush();
         }
 
+
         public void LogCSV(DataDictionary pairs, int frame, string? exclude = null, char separator = '\t')
         {
             if (!Open()) return;
@@ -158,7 +168,6 @@ namespace FFBitrateViewer
         }
 
 
-
         public void Close()
         {
             if (!IsOpened || Stream == null) return;
@@ -166,6 +175,12 @@ namespace FFBitrateViewer
             Stream.Close();
             Stream.Dispose();
             IsOpened = false;
+        }
+
+
+        public string GetFileName()
+        {
+            return Path.GetFileName(FS);
         }
     }
 }

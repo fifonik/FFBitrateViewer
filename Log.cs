@@ -1,4 +1,7 @@
-﻿namespace FFBitrateViewer
+﻿using System.Windows;
+using System;
+
+namespace FFBitrateViewer
 {
     public static class Log
     {
@@ -27,7 +30,15 @@
 
         public static void Write(LogLevel logLevel, string line)
         {
-            Logger?.Log(logLevel, line);
+            try
+            {
+                Logger?.Log(logLevel, line);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("FFBitrateViewer unable to write into file:\n" + Logger?.GetFileName() + "\n\nLogging is disabled.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Logger?.Disable();
+            }
         }
 
 

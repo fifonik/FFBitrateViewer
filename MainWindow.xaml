@@ -8,8 +8,8 @@
     xmlns:uc="clr-namespace:FFBitrateViewer.UserControls"
     xmlns:utils="clr-namespace:Utilities"
     mc:Ignorable="d"
-    Height="620" MinHeight="540"
-    Width="960" MinWidth="700"
+    Height="720" MinHeight="600"
+    Width="1280" MinWidth="940"
     Loaded="Window_Loaded" ResizeMode="CanResizeWithGrip"
     Title="{Binding Path=WindowTitle}"
 >
@@ -256,6 +256,7 @@
                 <RowDefinition Height="160"></RowDefinition>
                 <RowDefinition Height="50"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="25"></RowDefinition>
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
@@ -342,7 +343,7 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Bit rate (avg)" Width="90" x:Name="GridViewColBitRateAvg">
+                            <GridViewColumn Header=" Avg bit rate" Width="90" x:Name="GridViewColBitRateAvg">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth}">
@@ -354,13 +355,25 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Bit rate (max)" Width="90" x:Name="GridViewColBitRateMax">
+                            <GridViewColumn Header=" Max bit rate" Width="90" x:Name="GridViewColBitRateMax">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth}">
                                             <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
                                             <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsDataLoading, Mode=OneWay}" Visibility="{Binding Path=IsDataLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
                                             <TextBlock Text="{Binding Path=BitRateMax, Mode=OneWay, Converter={StaticResource BitRate}}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header=" Min bit rate" Width="90" x:Name="GridViewColBitRateMin">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColBitRateMin, Path=ActualWidth}">
+                                            <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
+                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsDataLoading, Mode=OneWay}" Visibility="{Binding Path=IsDataLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                                            <TextBlock Text="{Binding Path=BitRateMin, Mode=OneWay, Converter={StaticResource BitRate}}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Left" />
                                         </Grid>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
@@ -373,12 +386,13 @@
                 <!-- https://stackoverflow.com/questions/10309249/listview-gridviewcolumn-width -->
                 <Grid Visibility="Hidden">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColCheckbox,  Path=ActualWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColCheckbox,   Path=ActualWidth}"/>
                         <!-- Width is set to "Fill" -->
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColMediaInfo, Path=ActualWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColMediaInfo,  Path=ActualWidth}"/>
                         <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth}"/>
                         <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMin, Path=ActualWidth}"/>
                         <!--Correction Width-->
                         <ColumnDefinition Width="20"/>
                     </Grid.ColumnDefinitions>
@@ -442,10 +456,10 @@
                 <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='second', Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
                     <TextBlock Margin="-2,0,0,0" FontSize="14">Second based</TextBlock>
                 </RadioButton>
-
-                <!-- RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='GOP',    Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
+                <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='GOP',    Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
                     <TextBlock Margin="-2,0,0,0" FontSize="14">GOP based</TextBlock>
-                </RadioButton -->
+                </RadioButton>
+
                 <CheckBox Margin="50,0,0,0" VerticalContentAlignment="Center" IsChecked="{Binding Path=IsAdjustStartTimeOnPlot, Mode=TwoWay}" ToolTip="Use file/stream start time to adjust frames start time on plot">
                     <TextBlock FontSize="14">Adjust frames start time</TextBlock>
                 </CheckBox>
@@ -453,6 +467,14 @@
 
             <Grid Grid.Row="3" Grid.ColumnSpan="3" x:Name="Plot" Margin="0,5,0,0">
                 <oxySkia:PlotView Model="{Binding Path=PlotModel}" Controller="{Binding Path=PlotModel.Controller}" Padding="0,1,0,0" Margin="0" />
+            </Grid>
+
+            <Grid Grid.Row="4" Grid.ColumnSpan="3">
+                <TextBlock VerticalAlignment="Center" Margin="10,0,10,2" FontSize="14" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                <Bold>Zoom:</Bold> mouse wheel over plot/axes <Italic>or</Italic> +/- keys
+                <Span> </Span>
+                <Bold>Pan:</Bold> drag with right mouse button <Italic>or</Italic> hold Alt and drag with left mouse button <Italic>or</Italic> arrow keys.
+                </TextBlock>
             </Grid>
         </Grid>
 

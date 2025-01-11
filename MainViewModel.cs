@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Threading.Channels;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace FFBitrateViewer
 {
@@ -260,7 +261,7 @@ namespace FFBitrateViewer
             if (filesBitRateInfoGetTask != null && filesBitRateInfoGetTask.Status == TaskStatus.Running) return;
             IsReady   = false;
             IsRunning = true;
-            OverallProgress?.Show("Processing files");
+            OverallProgress?.Show("Processing started");
             cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
             try
@@ -270,16 +271,20 @@ namespace FFBitrateViewer
                     //var processor = new SynchronousProcessor();
                     for (int idx = 0; idx < Files.Count; ++idx)
                     {
+                        OverallProgress?.Show("Processing file: " + idx);
                         var file = Files[idx];
                         if (!file.IsExistsAndEnabled) continue;
                         file.FramesClear();
                         PlotSerieClear(idx);
-                        file.FramesGet(cancellationToken, (pos, frame) => {});
+                        var timeFormat = (file.MediaInfo?.Duration < 60 * 60) ? @"mm\:ss" : @"hh\:mm\:ss";
+                        file.FramesGet(cancellationToken, (pos, frame, lineNo) => {
+                            if (lineNo % 1000 == 0) OverallProgress?.Show("Processing file: " + idx + ", time: " + TimeSpan.FromSeconds(frame.StartTime).ToString(timeFormat));
+                        });
 
                         if (PlotModel != null)
                         {
                             PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
-                            PlotModel.AxisMaximumSet(0, file.FramesDurationGet());
+                            PlotModel.AxisMaximumSet(0, file.FramesMaxXGet(PlotViewType));
                             PlotModel.AxisMaximumSet(1, file.FramesMaxYGet(PlotViewType));
                             PlotModel.Redraw();
                         }
@@ -300,7 +305,6 @@ namespace FFBitrateViewer
             cancellationTokenSource = null;
             OverallProgress?.Hide();
             OverallProgress?.Reset();
-            OverallProgress?.Stop();
             IsRunning = false;
             IsReady   = true;
         }
@@ -376,7 +380,6 @@ namespace FFBitrateViewer
                 {
                     case "IsEnabled":
                     case "FS": // FS should never updated as we are not modifying filespec for existing file (deleting/adding new file instead)
-
                         int idx = Files.IndexOf(file);
                         if (idx >= 0)
                         {
@@ -396,6 +399,7 @@ namespace FFBitrateViewer
             {
                 AdjustStartTimeOnPlot = IsAdjustStartTimeOnPlot,
                 LogCommands           = IsLogCommands,
+                PlotViewType          = PlotViewType
             };
             foreach (var file in Files) result.Files.Add(new FileItemPO(file));
             return result;
@@ -410,6 +414,7 @@ namespace FFBitrateViewer
 
             IsAdjustStartTimeOnPlot = options.AdjustStartTimeOnPlot == true;
             IsLogCommands           = options.LogCommands == true;
+            PlotViewType            = options.PlotViewType;
 
             FilesClear();
             foreach (var file in options.Files) if (!string.IsNullOrEmpty(file.FS)) FileAdd(file.FS, file.IsEnabled);
@@ -432,7 +437,7 @@ namespace FFBitrateViewer
             foreach (var file in Files)
             {
                 if (!file.IsExistsAndEnabled) continue;
-                var x = file.GetDuration();
+                var x = file.FramesMaxXGet(PlotViewType);
                 if (x != null && x > maxX) maxX = (double)x;
                 int? y = file.FramesMaxYGet(PlotViewType);
                 if (y != null && y > maxY) maxY = (int)y;
@@ -492,7 +497,7 @@ namespace FFBitrateViewer
 
                 PlotSerieClear(idx);
 
-                var x = file.GetDuration();
+                var x = file.FramesMaxXGet(PlotViewType);
                 if (x != null && x > maxX) maxX = (double)x;
                 int? y = file.FramesMaxYGet(PlotViewType);
                 if (y != null && y > maxY) maxY = (int)y;

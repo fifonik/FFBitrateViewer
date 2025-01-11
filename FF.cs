@@ -527,7 +527,8 @@ namespace FFBitrateViewer
             match = VersionShortRegex.Match(info.Version);
             if (match.Success) info.VersionShort = match.Groups[1].Value;
 
-            info.IsLocal = File.Exists(AppDomain.CurrentDomain.BaseDirectory + Path.DirectorySeparatorChar + Executable);
+            var fs = Helpers.NormalizeDirSpec(AppDomain.CurrentDomain.BaseDirectory) + Executable;
+            info.IsLocal = File.Exists(fs + ".exe") || File.Exists(fs);
 
             Log.Write(LogLevel.DEBUG, "FF.VersionInfoParse: Finished (OK)");
         }
