@@ -20,7 +20,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 - **Open Source** ([MIT License](LICENSE.txt)).
 
 
-## Latest version: 
+## Latest version
 - Latest Beta: [0.9.0 beta 1](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.9.0-beta.1)
 
 
@@ -28,7 +28,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 - Windows OS
 - .NET 8.0. The program should ask you to download and install it if required.
 - FFProbe.exe (a part of FFMpeg package). You have to download it from [official ffmpeg web site](https://ffmpeg.org/download.html).
-  You can use sibgle file static build for simplicity, however, for real usage I'd recommend to make shared build accessible in %PATH%.
+  You can use single-file static build for simplicity, however, for real usage I'd recommend to make shared build accessible in %PATH%.
 
 
 ## How to use
