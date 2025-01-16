@@ -1,6 +1,8 @@
-﻿using OxyPlot;
+﻿using Newtonsoft.Json.Linq;
+using OxyPlot;
 using System;
 using System.Collections.Generic;
+using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace FFBitrateViewer
 {
@@ -98,7 +100,6 @@ namespace FFBitrateViewer
     public class GOP
     {
         private List<Frame> _frames           { get; set; } = new();
-
         public  int         BitRate           { get { return Duration == 0 ? 0 : (int)double.Round(Size / (double)Duration); } }
         public  double      Duration          { get { return DurationFixed ?? DurationFrames ?? 0; } }
         public  double?     DurationFixed     { get; private set; } // NULL -- for normal GOPs, not NULL for fixed length GOPs as 'second'
@@ -130,7 +131,7 @@ namespace FFBitrateViewer
 
         public void Add(Frame frame)
         {
-            if (DurationFixed == null) // GOP based
+            if (DurationFixed == null) // Not SECOND based
             {
                 if (frame.FrameType == FramePictType.I)
                 {
@@ -139,7 +140,7 @@ namespace FFBitrateViewer
                 else
                 {
                     // No exception as frames could be added out of order
-                    // So it is possible that P-frame will fe added 1st and then I-frame with smaller start time will be added
+                    // So it is possible that P-frame will be added 1st and then I-frame with smaller start time will be added 2nd
                     // if (_frames.Count == 0) throw new ArgumentException("First frame in GOP must be I-frame");
                 }
             }
@@ -174,9 +175,12 @@ namespace FFBitrateViewer
         private List<GOP>   _framesByTime                { get; set; } = new();
         private double?     _framesByTimeDuration        { get; set; }
         private double?     _framesByTimeStartTimeOffset { get; set; }
+        private int         _maxSizeFrame                { get; set; } = 0;
+        private int         _maxSizeGOP                  { get; set; } = 0;
+        private int         _maxSizeTime                 { get; set; } = 0;
 
         public bool         IsAdjustStartTime            { get; private set; } = true;
-        public double?      Duration                     { get { return _frames.Count > 0 ? (_frames[^1].EndTime - (IsAdjustStartTime ? StartTime : 0)) : null; } } // todo@ should not duration be the same regardless IsAdjustStartTime?
+        public double?      Duration                     { get { return _frames.Count > 0 ? (_frames[^1].EndTime - (IsAdjustStartTime ? StartTime : 0)) : null; } }
         public int?         FramesCount                  { get { return _frames.Count; } }
         public double       StartTime                    { get; set; } = 0;
 
@@ -184,6 +188,7 @@ namespace FFBitrateViewer
         public int Add(Frame frame, bool? isForceOrder = null)
         {
             var isOrder = isForceOrder == true || !frame.IsOrdered;
+            if (frame.Size > _maxSizeFrame) _maxSizeFrame = frame.Size;
             if (isOrder)
             {
                 var pos = PosFind(frame);
@@ -203,9 +208,15 @@ namespace FFBitrateViewer
             _frames.Clear();
             _framesByGOP.Clear();
             _framesByTime.Clear();
+            _maxSizeFrame = 0;
+            _maxSizeGOP   = 0;
+            _maxSizeTime  = 0;
+            _framesByTimeDuration        = null;
+            _framesByTimeStartTimeOffset = null;
         }
 
 
+        // todo@ caching?
         public List<DataPoint> DataPointsGet(string? plotViewType, int sizeDivider = 1000/* kB */)
         {
             List<DataPoint> data = new();
@@ -253,22 +264,20 @@ namespace FFBitrateViewer
 
         public int MaxYGet(string? plotViewType, int sizeDivider = 1000/* kB */)
         {
-            int value           = 0;
+            var value           = 0;
             var startTimeOffset = (IsAdjustStartTime ? StartTime : 0);
             switch (plotViewType?.ToUpper() ?? "")
             {
                 case "FRAME":
-                    foreach (var frame in _frames) if (frame.Size > value) value = frame.Size;
+                    value = _maxSizeFrame;
                     break;
                 case "GOP":
                     GroupByGOP();
-                    foreach (var gop in _framesByGOP) if (gop.BitRate > value) value = gop.BitRate;
-                    value *= 8; // to kB
+                    value = _maxSizeGOP * 8 /* B/s => b/s */;
                     break;
                 case "SECOND":
                     GroupByTime(1, startTimeOffset);
-                    foreach (var gop in _framesByTime) if (gop.BitRate > value) value = gop.BitRate;
-                    value *= 8; // to kB
+                    value = _maxSizeTime * 8 /* B/s => b/s */;
                     break;
             }
             return (int)double.Round(value / sizeDivider);
@@ -279,6 +288,8 @@ namespace FFBitrateViewer
         {
             if (_framesByGOP.Count > 0) return;
             _framesByGOP = GroupByGOP(_frames);
+            _maxSizeGOP = 0;
+            foreach (var gop in _framesByGOP) if (gop.BitRate > _maxSizeGOP) _maxSizeGOP = gop.BitRate;
         }
 
 
@@ -299,7 +310,7 @@ namespace FFBitrateViewer
                     continue;
                 }
 
-                // On every I-frame finalizing current GOP and creating a new one
+                // On every I-frame finalyzing current GOP and creating a new one
                 if (frame.FrameType == FramePictType.I)
                 {
                     result.Add(gop);
@@ -314,7 +325,6 @@ namespace FFBitrateViewer
             }
 
             if (gop != null) result.Add(gop);
-
             return result;
         }
 
@@ -325,6 +335,8 @@ namespace FFBitrateViewer
             _framesByTime                = GroupByTime(_frames, duration, startTimeOffset);
             _framesByTimeDuration        = duration;
             _framesByTimeStartTimeOffset = startTimeOffset;
+            _maxSizeTime                 = 0;
+            foreach (var gop in _framesByTime) if (gop.BitRate > _maxSizeTime) _maxSizeTime = gop.BitRate;
         }
 
 
@@ -392,9 +404,9 @@ namespace FFBitrateViewer
 
             return new FramesBitRates
             {
-                Avg = (total == 0)  ? null : new BitRate((int)double.Round(8/* bit => byte */ * (double)total / (double)Duration)),
-                Max = (max == null) ? null : new BitRate((int)max * 8/* bit => byte */),
-                Min = (min == null) ? null : new BitRate((int)min * 8/* bit => byte */)
+                Avg = (total == 0)  ? null : new BitRate((int)double.Round(8/* B/s => b/s */ * (double)total / (double)Duration)),
+                Max = (max == null) ? null : new BitRate((int)max * 8/* B/s => b/s */),
+                Min = (min == null) ? null : new BitRate((int)min * 8/* B/s => b/s */)
             };
         }
 

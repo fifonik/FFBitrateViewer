@@ -57,7 +57,7 @@ namespace FFBitrateViewer
 
         private void ProgramHome_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true});
+            Helpers.RunAssociatedSystemProgram(e.Uri.AbsoluteUri);
             e.Handled = true;
         }
     }

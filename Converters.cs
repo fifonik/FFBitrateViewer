@@ -1,5 +1,5 @@
+using Newtonsoft.Json.Linq;
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
@@ -27,7 +27,7 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is BitRate bitrate) ? bitrate.ToString() : ConverterHelper.Unknown;
+            return (value is BitRate bitrate) ? bitrate.ToString() : ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -76,6 +76,37 @@ namespace FFBitrateViewer
     }
 
 
+    public class FileDurationConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            var d = (double?)value;
+            return (d == null) ? ConverterHelper.NA  : TimeSpan.FromSeconds((double)d).ToString(@"hh\:mm\:ss");
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
+
+    public class FramesCountConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (value is int i) ? i : ConverterHelper.NA;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
+
+    public class BitrateFilledToBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (value is BitRate);
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
+
     public class MediaInfoBitRateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -85,7 +116,7 @@ namespace FFBitrateViewer
                 if (info.Video0?.BitRate != null) return info.Video0.BitRate.ToString();
                 if (info.BitRate != null && info.BitRate.Value != 0) return info.BitRate.ToString() + "*";
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -96,7 +127,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.Format?.ToString(VideoStreamFormatToStringMode.COLOR_RANGE) : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -120,7 +151,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.ToString() : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -131,7 +162,7 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is MediaInfo info && info.BitRate != null) ? info.BitRate.ToString() : ConverterHelper.Unknown;
+            return (value is MediaInfo info && info.BitRate != null) ? info.BitRate.ToString() : ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -146,7 +177,7 @@ namespace FFBitrateViewer
                 string result = TimeSpan.FromSeconds((double)info.Duration).ToString(@"hh\:mm\:ss\.ff");
                 if (result != "00:00:00.00") return result;
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -161,7 +192,7 @@ namespace FFBitrateViewer
                 string result = TimeSpan.FromSeconds((double)info.StartTime).ToString(@"hh\:mm\:ss\.ff");
                 if (result != "00:00:00.00") return result;
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -172,19 +203,9 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info && info.Video0?.FrameRateAvg != null ? (info.Video0?.FrameRateAvg?.ToString() + " fps (" + info.Video0?.FrameRateAvg?.Value + ")"): null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
-    }
-
-
-    public class MediaInfoFramesCountConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return (value is int i) ? i : ConverterHelper.Unknown;
-        }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
 
@@ -194,7 +215,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.Format?.ToString(VideoStreamFormatToStringMode.COLOR_SPACE_FULL) : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -206,7 +227,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.Format?.ToString(VideoStreamFormatToStringMode.COLOR_SPACE) : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -218,7 +239,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.Format?.ToString(VideoStreamFormatToStringMode.CHROMA_SUBSAMPLING) : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -240,7 +261,7 @@ namespace FFBitrateViewer
                     if (result != "00:00:00.00") return result + (info.Video0?.Duration == null ? "*" : "");
                 }
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -251,7 +272,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.Format?.ToString(VideoStreamFormatToStringMode.FIELD_TYPE_NAME) : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -263,7 +284,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string? s = value is MediaInfo info ? info.Video0?.Resolution?.ToString('x') : null;
-            return string.IsNullOrEmpty(s) ? ConverterHelper.Unknown : s;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
@@ -273,7 +294,7 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is MediaInfo info && info.Video0?.BitRate != null) ? info.Video0.BitRate.ToString() : ConverterHelper.Unknown;
+            return (value is MediaInfo info && info.Video0?.BitRate != null) ? info.Video0.BitRate.ToString() : ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -288,7 +309,7 @@ namespace FFBitrateViewer
                 string result = TimeSpan.FromSeconds((double)info.Video0.Duration).ToString(@"hh\:mm\:ss\.ff");
                 if (result != "00:00:00.00") return result;
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -303,7 +324,7 @@ namespace FFBitrateViewer
                 string result = TimeSpan.FromSeconds((double)info.StartTime).ToString(@"hh\:mm\:ss\.ff");
                 if (result != "00:00:00.00") return result;
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -323,7 +344,7 @@ namespace FFBitrateViewer
                 };
                 return string.Join(", ", items);
             }
-            return ConverterHelper.Unknown;
+            return ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -366,5 +387,14 @@ namespace FFBitrateViewer
         }
     }
 
+    public class InverseBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (targetType != typeof(bool)) throw new InvalidOperationException("The target must be a boolean");
+            return !(bool)value;
+        }
 
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
 }

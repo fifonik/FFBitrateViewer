@@ -16,23 +16,36 @@
     <Window.InputBindings>
         <KeyBinding Command="{Binding Path=ExecStartCmd}"             Key="F9"/>
         <KeyBinding Command="{Binding Path=ExecStopCmd}"              Key="Esc"/>
-        <KeyBinding Command="{Binding Path=PlotExportToClipboardCmd}" Key="C" Modifiers="Ctrl"/>
-        <KeyBinding Command="{Binding Path=PlotExportToFileCmd}"      Key="S" Modifiers="Ctrl"/>
         <KeyBinding Command="{Binding Path=FilesAddCmd}"              Key="O" Modifiers="Ctrl"/>
         <KeyBinding Command="{Binding Path=FilesRemoveCmd}"           Key="DEL"/>
         <KeyBinding Command="{Binding Path=MediaInfoReloadCmd}"       Key="F5"/>
+        <KeyBinding Command="{Binding Path=PlotExportToClipboardCmd}" Key="C" Modifiers="Ctrl"/>
+        <KeyBinding Command="{Binding Path=PlotExportToFileCmd}"      Key="S" Modifiers="Ctrl"/>
+        <KeyBinding Command="{Binding Path=ResetAllCmd}"              Key="W" Modifiers="Ctrl"/>
     </Window.InputBindings>
 
     <Window.Resources>
         <local:BindingProxy                      x:Key="proxy" Data="{Binding}" />
 
         <BooleanToVisibilityConverter            x:Key="BoolToVisibility" />
-        <local:FileDropTargetBackgroundConverter x:Key="FileDropTargetBackground" />
-        <local:MediaInfoCompactConverter         x:Key="MediaInfoFrameInfoCompact" />
         <local:BitRateConverter                  x:Key="BitRate" />
+        <local:BitrateFilledToBooleanConverter   x:Key="BitRateFilledToBoolean" />
+        <local:FileDropTargetBackgroundConverter x:Key="FileDropTargetBackground" />
+        <local:FileDurationConverter             x:Key="FileDuration" />
+        <local:FramesCountConverter              x:Key="FramesCount" />
         <local:FSConverter                       x:Key="FS" />
+        <local:InverseBooleanConverter           x:Key="InverseBoolean" />
+        <local:MediaInfoCompactConverter         x:Key="MediaInfoFrameInfoCompact" />
         <local:NotNullToVisibileConverter        x:Key="NotNullVisible" />
         <local:StringToBooleanConverter          x:Key="StringToBoolean" />
+
+        <Style TargetType="{x:Type ContentControl}">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.5" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
 
         <Style x:Key="FFProbeValidity" TargetType="{x:Type StatusBarItem}">
             <Style.Triggers>
@@ -47,6 +60,26 @@
             <Setter Property="Foreground" Value="#FF08DE2F" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0,0,0,0" />
+        </Style>
+
+        <Style x:Key="BitrateContent" TargetType="{x:Type TextBox}">
+            <Setter Property="Padding" Value="0,1" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="BitrateAvgContent" TargetType="{x:Type TextBox}">
+            <Setter Property="Padding" Value="0,1" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="FontSize" Value="13" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=BitRateAvg, Converter={StaticResource BitRateFilledToBoolean}}" Value="True">
+                    <Setter Property="Control.FontWeight" Value="Bold" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <!-- ListViewItem ControlTemplate -->
@@ -231,6 +264,12 @@
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="_Reset ALL results" Command="{Binding Path=ResetAllCmd}" InputGestureText="Ctrl+W">
+                    <MenuItem.Icon>
+                        <ContentControl Template="{StaticResource CleanDataIcon}" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
                 <MenuItem Header="Copy plot to _clipboard" Command="{Binding PlotExportToClipboardCmd}" InputGestureText="Ctrl+C">
                     <MenuItem.Icon>
                         <ContentControl Template="{StaticResource CopyThemeIcon}" />
@@ -266,7 +305,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" Height="25" VerticalAlignment="Top" Margin="15,15,15,0">
-                <Button Command="{Binding FilesAddCmd}" Margin="0" Height="25" FontSize="14" ToolTip="Add distorted files to the list" HorizontalContentAlignment="Left" AllowDrop="False">
+                <Button Command="{Binding FilesAddCmd}" Margin="0" Height="25" FontSize="14" ToolTip="Add files to the list" HorizontalContentAlignment="Left" AllowDrop="False">
                     <StackPanel Orientation="Horizontal">
                         <ContentControl Template="{StaticResource OpenFileIcon}" Margin="5,0,5,0" />
                         <TextBlock Margin="0,0,5,0">Add files…</TextBlock>
@@ -280,7 +319,7 @@
                 </Button>
             </StackPanel>
 
-            <Grid Grid.Row="1" Grid.ColumnSpan="3" x:Name="FilesList"  Margin="15,5,15,0">
+            <Grid Grid.Row="1" Grid.ColumnSpan="3" x:Name="FilesList"  Margin="15,5,15,0" IsEnabled="{Binding Path=IsRunning, Mode=OneWay, Converter={StaticResource InverseBoolean}}" VirtualizingStackPanel.IsVirtualizing="False">
                 <ListView x:Name="listviewFiles" FontSize="14"
                     ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                     AllowDrop="True"
@@ -309,23 +348,30 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Path to file"
-                                Width="{Binding ElementName=helperField, Path=ActualWidth}"
-                                x:Name="GridViewColPath"
-                            >
+                            <GridViewColumn Header="" Width="20" x:Name="GridViewColPlayButton">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Path=FS, Mode=OneWay, Converter={StaticResource FS}}" ToolTip="{Binding Path=FS}" FontSize="13" Padding="0" Margin="-5,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        <Button IsEnabled="{Binding Path=IsPreviewable, Mode=OneWay}" Padding="0" Margin="-5,0" VerticalContentAlignment="Center" VerticalAlignment="Center" Background="White" BorderBrush="White"
+                                            ToolTip="Play media with associated system player" Command="{Binding Source={StaticResource proxy}, Path=Data.PlayMediaCmd}" CommandParameter="{Binding Path=FS}"
+                                        >
+                                            <ContentControl Template="{StaticResource StartIcon}" />
+                                        </Button>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Media info" Width="140"
-                                x:Name="GridViewColMediaInfo"
-                            >
+                            <GridViewColumn Header=" Path to file" Width="{Binding ElementName=helperField, Path=ActualWidth, Mode=OneWay}" x:Name="GridViewColPath">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColMediaInfo, Path=ActualWidth}">
+                                        <TextBlock Text="{Binding Path=FS, Mode=OneWay, Converter={StaticResource FS}}" ToolTip="{Binding Path=FS, Mode=OneWay}" FontSize="13" Padding="0" Margin="-5,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header=" Media info" Width="140" x:Name="GridViewColMediaInfo">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColMediaInfo, Path=ActualWidth, Mode=OneWay}">
                                             <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
                                             <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsMediaInfoLoading, Mode=OneWay}" Visibility="{Binding Path=IsMediaInfoLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
                                             <Label VerticalContentAlignment="Center" Padding="0" FontSize="13"
@@ -343,37 +389,63 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
+                            <GridViewColumn Header=" Duration" Width="65" x:Name="GridViewColDuration">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="-2,0" Width="{Binding ElementName=GridViewColDuration, Path=ActualWidth, Mode=OneWay}" HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding Path=Duration, Mode=OneWay, Converter={StaticResource FileDuration}}" FontSize="13" VerticalAlignment="Center" TextAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <GridViewColumn Header=" Frames" Width="65" x:Name="GridViewColFrames">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="-2,0" Width="{Binding ElementName=GridViewColFrames, Path=ActualWidth, Mode=OneWay}" HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding Path=FramesCount, Mode=OneWay, Converter={StaticResource FramesCount}}" FontSize="13" VerticalAlignment="Center" TextAlignment="Right" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
                             <GridViewColumn Header=" Avg bit rate" Width="90" x:Name="GridViewColBitRateAvg">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth}">
+                                        <Grid Margin="-2,0" Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth, Mode=OneWay}" HorizontalAlignment="Right">
                                             <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
-                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsDataLoading, Mode=OneWay}" Visibility="{Binding Path=IsDataLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
-                                            <TextBlock Text="{Binding Path=BitRateAvg, Mode=OneWay, Converter={StaticResource BitRate}}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsFramesLoading, Mode=OneWay}" Visibility="{Binding Path=IsFramesLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                                            <TextBox Text="{Binding Path=BitRateAvg, Mode=OneWay, Converter={StaticResource BitRate}}" Style="{StaticResource BitrateAvgContent}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                                GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus" PreviewMouseUp="TextBox_PreviewMouseUp"
+                                            />
                                         </Grid>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Max bit rate" Width="90" x:Name="GridViewColBitRateMax">
+                            <GridViewColumn Header=" Min bit rate" Width="85" x:Name="GridViewColBitRateMin">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth}">
+                                        <Grid Margin="-2,0" Width="{Binding ElementName=GridViewColBitRateMin, Path=ActualWidth, Mode=OneWay}" HorizontalAlignment="Right">
                                             <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
-                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsDataLoading, Mode=OneWay}" Visibility="{Binding Path=IsDataLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
-                                            <TextBlock Text="{Binding Path=BitRateMax, Mode=OneWay, Converter={StaticResource BitRate}}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsFramesLoading, Mode=OneWay}" Visibility="{Binding Path=IsFramesLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                                            <TextBox Text="{Binding Path=BitRateMin, Mode=OneWay, Converter={StaticResource BitRate}}" Style="{StaticResource BitrateContent}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                                GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus" PreviewMouseUp="TextBox_PreviewMouseUp"
+                                            />
                                         </Grid>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Min bit rate" Width="90" x:Name="GridViewColBitRateMin">
+                            <GridViewColumn Header=" Max bit rate" Width="85" x:Name="GridViewColBitRateMax">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColBitRateMin, Path=ActualWidth}">
+                                        <Grid Margin="-2,0" Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth, Mode=OneWay}" HorizontalAlignment="Right">
                                             <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
-                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsDataLoading, Mode=OneWay}" Visibility="{Binding Path=IsDataLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
-                                            <TextBlock Text="{Binding Path=BitRateMin, Mode=OneWay, Converter={StaticResource BitRate}}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                                            <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsFramesLoading, Mode=OneWay}" Visibility="{Binding Path=IsFramesLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
+                                            <TextBox Text="{Binding Path=BitRateMax, Mode=OneWay, Converter={StaticResource BitRate}}" Style="{StaticResource BitrateContent}" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                                GotFocus="TextBox_GotFocus" LostFocus="TextBox_LostFocus" PreviewMouseUp="TextBox_PreviewMouseUp"
+                                            />
                                         </Grid>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
@@ -386,17 +458,20 @@
                 <!-- https://stackoverflow.com/questions/10309249/listview-gridviewcolumn-width -->
                 <Grid Visibility="Hidden">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColCheckbox,   Path=ActualWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColCheckbox,   Path=ActualWidth, Mode=OneWay}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColPlayButton, Path=ActualWidth, Mode=OneWay}"/>
                         <!-- Width is set to "Fill" -->
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColMediaInfo,  Path=ActualWidth}"/>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth}"/>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth}"/>
-                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMin, Path=ActualWidth}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColMediaInfo,  Path=ActualWidth, Mode=OneWay}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColDuration,   Path=ActualWidth, Mode=OneWay}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColFrames,     Path=ActualWidth, Mode=OneWay}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateAvg, Path=ActualWidth, Mode=OneWay}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMin, Path=ActualWidth, Mode=OneWay}"/>
+                        <ColumnDefinition Width="{Binding ElementName=GridViewColBitRateMax, Path=ActualWidth, Mode=OneWay}"/>
                         <!--Correction Width-->
-                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="10"/>
                     </Grid.ColumnDefinitions>
-                    <Grid Grid.Column="1" x:Name="helperField"/>
+                    <Grid Grid.Column="2" x:Name="helperField" Background="Aqua"/>
                 </Grid>
             </Grid>
 
@@ -405,10 +480,10 @@
                     <Button.Resources>
                         <Style TargetType="{x:Type Button}">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Path=IsRunning}" Value="True">
+                                <DataTrigger Binding="{Binding Path=IsRunning, Mode=OneWay}" Value="True">
                                     <Setter Property="ToolTip" Value="Stop"/>
                                 </DataTrigger>
-                                <DataTrigger Binding="{Binding Path=IsRunning}" Value="False">
+                                <DataTrigger Binding="{Binding Path=IsRunning, Mode=OneWay}" Value="False">
                                     <Setter Property="ToolTip" Value="Start"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -421,7 +496,7 @@
                                     <Style TargetType="{x:Type ContentControl}">
                                         <Setter Property="Template" Value="{StaticResource StartIcon}" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Path=IsRunning}" Value="True">
+                                            <DataTrigger Binding="{Binding Path=IsRunning, Mode=OneWay}" Value="True">
                                                 <Setter Property="Template" Value="{StaticResource StopIcon}" />
                                             </DataTrigger>
                                         </Style.Triggers>
@@ -434,11 +509,11 @@
                             <TextBlock.Resources>
                                 <Style TargetType="{x:Type TextBlock}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=IsRunning}" Value="True">
+                                        <DataTrigger Binding="{Binding Path=IsRunning, Mode=OneWay}" Value="True">
                                             <Setter Property="Text" Value="Stop" />
                                             <Setter Property="ToolTip" Value="Stop (Esc)" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding Path=IsRunning}" Value="False">
+                                        <DataTrigger Binding="{Binding Path=IsRunning, Mode=OneWay}" Value="False">
                                             <Setter Property="Text" Value="Start" />
                                             <Setter Property="ToolTip" Value="Start (F9)" />
                                         </DataTrigger>
@@ -449,20 +524,31 @@
                     </StackPanel>
                 </Button>
 
-                <Label VerticalContentAlignment="Center" FontSize="14" Margin="50,0,0,2">Plot view:</Label>
-                <RadioButton GroupName="PlotViewType" Margin="5,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='frame',  Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
-                    <TextBlock Margin="-2,0,0,0" FontSize="14">Frame based</TextBlock>
-                </RadioButton>
-                <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='second', Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
-                    <TextBlock Margin="-2,0,0,0" FontSize="14">Second based</TextBlock>
-                </RadioButton>
-                <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='GOP',    Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
-                    <TextBlock Margin="-2,0,0,0" FontSize="14">GOP based</TextBlock>
-                </RadioButton>
+                <StackPanel Orientation="Horizontal" IsEnabled="{Binding Path=IsRunning, Converter={StaticResource InverseBoolean}}">
+                    <Button Width="90" FontSize="18" Margin="10,0,0,0" Command="{Binding Path=ResetAllCmd}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ToolTip="Reset ALL frames">
+                        <StackPanel Orientation="Horizontal" Margin="0,-1,0,0">
+                            <Viewbox Width="24" Height="24">
+                                <ContentControl Template="{StaticResource CleanDataIcon}" />
+                            </Viewbox>
+                            <TextBlock Margin="5,0,5,0">Reset</TextBlock>
+                        </StackPanel>
+                    </Button>
 
-                <CheckBox Margin="50,0,0,0" VerticalContentAlignment="Center" IsChecked="{Binding Path=IsAdjustStartTimeOnPlot, Mode=TwoWay}" ToolTip="Use file/stream start time to adjust frames start time on plot">
-                    <TextBlock FontSize="14">Adjust frames start time</TextBlock>
-                </CheckBox>
+                    <Label VerticalContentAlignment="Center" FontSize="14" Margin="50,0,0,2">Plot view:</Label>
+                    <RadioButton GroupName="PlotViewType" Margin="5,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='frame',  Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
+                        <TextBlock Margin="-2,0,0,0" FontSize="14">Frame based</TextBlock>
+                    </RadioButton>
+                    <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='second', Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
+                        <TextBlock Margin="-2,0,0,0" FontSize="14">Second based</TextBlock>
+                    </RadioButton>
+                    <RadioButton GroupName="PlotViewType" Margin="10,0,0,0" IsChecked="{Binding Path=PlotViewType, ConverterParameter='GOP',    Converter={StaticResource StringToBoolean}, Mode=TwoWay}" VerticalContentAlignment="Center">
+                        <TextBlock Margin="-2,0,0,0" FontSize="14">GOP based</TextBlock>
+                    </RadioButton>
+
+                    <CheckBox Margin="50,0,0,0" VerticalContentAlignment="Center" IsChecked="{Binding Path=IsAdjustStartTimeOnPlot, Mode=TwoWay}" ToolTip="Use file/stream start time to adjust frames start time on plot">
+                        <TextBlock FontSize="14">Adjust frames start time</TextBlock>
+                    </CheckBox>
+                </StackPanel>
             </StackPanel>
 
             <Grid Grid.Row="3" Grid.ColumnSpan="3" x:Name="Plot" Margin="0,5,0,0">
@@ -471,18 +557,19 @@
 
             <Grid Grid.Row="4" Grid.ColumnSpan="3">
                 <TextBlock VerticalAlignment="Center" Margin="10,0,10,2" FontSize="14" ScrollViewer.VerticalScrollBarVisibility="Hidden">
-                <Bold>Zoom:</Bold> mouse wheel over plot/axes <Italic>or</Italic> +/- keys
-                <Span> </Span>
-                <Bold>Pan:</Bold> drag with right mouse button <Italic>or</Italic> hold Alt and drag with left mouse button <Italic>or</Italic> arrow keys.
+                    <Bold>Zoom:</Bold> mouse wheel over plot/axes <Italic>or</Italic> +/- keys
+                    <Span> </Span>
+                    <Bold>Pan:</Bold> drag with right mouse button <Italic>or</Italic> hold Alt and drag with left mouse button <Italic>or</Italic> arrow keys.
                 </TextBlock>
             </Grid>
         </Grid>
 
-        <StatusBar Grid.Row="2" Height="25" VerticalAlignment="Bottom" Margin="0" VerticalContentAlignment="Center" Padding="5,0" HorizontalContentAlignment="Stretch">
-            <StatusBarItem DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,12,0">
+        <StatusBar Grid.Row="2" Height="25" VerticalAlignment="Bottom" Margin="0" VerticalContentAlignment="Stretch" Padding="5,0,20,1" HorizontalContentAlignment="Stretch" UseLayoutRounding="True">
+            <StatusBarItem DockPanel.Dock="Right" VerticalAlignment="Center">
                 <Grid Width="260" Height="21" VerticalAlignment="Center">
-                    <ProgressBar Height="17" Minimum="0" Maximum="{Binding Path=OverallProgress.Max, Mode=OneWay}" Value="{Binding Path=OverallProgress.Current, Mode=OneWay}" Visibility="{Binding Path=OverallProgress.IsActive, Converter={StaticResource BoolToVisibility}}" IsIndeterminate="{Binding Path=OverallProgress.IsIndeterminate}" VerticalAlignment="Center" />
-                    <TextBlock FontSize="12" Margin="4,0,4,0" Text="{Binding Path=OverallProgress.Text, Mode=OneWay}" VerticalAlignment="Center" Foreground="DimGray"></TextBlock>
+                    <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
+                    <ProgressBar Height="17" Minimum="0" Maximum="{Binding Path=OverallProgress.Max, Mode=OneWay}" Value="{Binding Path=OverallProgress.Current, Mode=OneWay}" Visibility="{Binding Path=OverallProgress.IsActive, Converter={StaticResource BoolToVisibility}}" IsIndeterminate="{Binding Path=OverallProgress.IsIndeterminateXAML}" VerticalAlignment="Center" />
+                    <TextBlock FontSize="12" Margin="4,0,4,0" Text="{Binding Path=OverallProgress.Text, Mode=OneWay}" VerticalAlignment="Center" Foreground="Black"/>
                 </Grid>
             </StatusBarItem>
             <StatusBarItem Padding="0" Content="FFProbe:" FontSize="14" Margin="3,0,0,0"></StatusBarItem>

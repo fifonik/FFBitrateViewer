@@ -1,48 +1,27 @@
 using System;
-using System.Collections.ObjectModel;
 
 
 namespace FFBitrateViewer
 {
     public class OverallProgress : Bindable
     {
-        private int     FilesWeightTotal        = 1;
-        private int     FilesWeightProcessed    = 0;
-        private int     CurrentFileWeight       = 1;
-        private int     FramesTotal             = 0;
-        private int     FramesProcessed         = 0;
-        public bool     IsActive        { get { return Get<bool>(); }    private set { Set(value); } }
-        public bool     IsIndeterminate { get { return Get<bool>(); }    private set { Set(value); } }
-        public int      Current         { get { return Get<int>(); }     private set { Set(value); } }
-        public int      Max             { get { return Get<int>(); }     private set { Set(value); } }
-        public double   CurrentPercent  { get { return Get<double>(); }  private set { Set(value); } }
-        public string?  Text            { get { return Get<string?>(); } private set { Set(value); } }
+        public  bool    IsActive            { get { return Get<bool>(); }    private set { Set(value); } }
+        private bool    IsIndeterminate     { get { return Get<bool>(); }    set { Set(value); } }
+        public  bool    IsIndeterminateXAML { get { return IsIndeterminate && IsActive; } }
+        public  int     Current             { get { return Get<int>(); }     set { Set(value); /* PercentUpdate(); */ } }
+        public  int     Max                 { get { return Get<int>(); }     set { Set(value); /* PercentUpdate(); */ } }
+        public  double  CurrentPercent      { get { return Get<double>(); }  private set { Set(value); } }
+        public  string? Text                { get { return Get<string?>(); } private set { Set(value); } }
+        public  double  ProcessedDuration   { get { return Get<double>();  } set { Set(value); } }
 
 
-        public OverallProgress() {
+        public OverallProgress(bool indeterminate = false) {
+            IsIndeterminate = indeterminate;
+            Max = 100;
+            Current = 0;
+            ProcessedDuration = 0;
             //IsActive = true;
-            //IsIndeterminate = true;
             //Text = "123";
-        }
-
-
-        public void Init()
-        {
-            FilesWeightTotal        = 0;
-            FilesWeightProcessed    = 0;
-            CurrentFileWeight       = 1;
-            FramesTotal             = 0;
-            FramesProcessed         = 0;
-            MaxUpdate();
-            CurrentUpdate();
-        }
-
-
-        public void Init(int max)
-        {
-            Reset();
-            Max = max;
-            CurrentPercentUpdate();
         }
 
 
@@ -76,56 +55,20 @@ namespace FFBitrateViewer
 
         public void Reset()
         {
-            FilesWeightTotal        = 1;
-            FilesWeightProcessed    = 0;
-            CurrentFileWeight       = 1;
-            FramesTotal             = 0;
-            FramesProcessed         = 0;
-            MaxUpdate();
-            CurrentUpdate();
+            Current = 0;
+            ProcessedDuration = 0;
         }
 
 
-        public void Inc()
+        public void FileProgressSet(int fileIndex, Frame? frame = null)
         {
-            ++Current;
-            CurrentPercentUpdate();
-        }
-
-
-        public void FramesTotalSet(int frames)
-        {
-            if (frames < 0) return;
-            FramesTotal = frames;
-            CurrentUpdate();
-        }
-
-
-        public void FramesProcessedSet(int frame)
-        {
-            if (frame < 0 || FramesTotal == 0) return;
-            FramesProcessed = frame;
-            CurrentUpdate();
-        }
-
-
-        private void CurrentUpdate()
-        {
-            Current = 100 * FilesWeightProcessed + ((FramesTotal != 0) ? CurrentFileWeight * (int)Math.Round((double)100 * FramesProcessed / FramesTotal) : 0);
-            CurrentPercentUpdate();
-        }
-
-
-        private void CurrentPercentUpdate()
-        {
-            CurrentPercent = Max == 0 ? 0 : (Current / (double)Max);
-        }
-
-
-        private void MaxUpdate()
-        {
-            Max = 100 * FilesWeightTotal;
-            CurrentPercentUpdate();
+            string s = "Processing file: " + (fileIndex + 1);
+            if (frame != null)
+            {
+                s += ", time: " + TimeSpan.FromSeconds(frame.StartTime).ToString(@"hh\:mm\:ss");
+                Current = (int)(ProcessedDuration + frame.StartTime);
+            }
+            Text = s;
         }
     }
 

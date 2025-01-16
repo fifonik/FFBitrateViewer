@@ -6,6 +6,9 @@
         <ControlTemplate x:Key="CopyThemeIcon">
             <Frame Source="Icons/CopyTheme_16x.xaml" Width="16" Height="16"/>
         </ControlTemplate>
+        <ControlTemplate x:Key="CleanDataIcon">
+            <Frame Source="Icons/CleanData_16x.xaml" Width="16" Height="16"/>
+        </ControlTemplate>
         <ControlTemplate x:Key="DeleteAllRowsIcon">
             <Frame Source="Icons/DeleteAllRows_16x.xaml" Width="16" Height="16"/>
         </ControlTemplate>

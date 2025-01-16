@@ -117,12 +117,12 @@ namespace FFBitrateViewer
             vm.ExecStartCmd = new RelayCommand(
                 param =>
                 {
-                    if (!vm.IsRunning && vm.IsReady && vm.IsFilesReady() && vm.IsOptionsReady())
+                    if (!vm.IsRunning && vm.IsReady && vm.IsFilesReady())
                     {
                         vm.FilesProcess();
                     }
                 },
-                param => { return !vm.IsRunning && vm.IsReady && vm.IsFilesReady() && vm.IsOptionsReady(); }
+                param => { return !vm.IsRunning && vm.IsReady && vm.IsFilesReady(); }
             );
 
             vm.ExecStopCmd = new RelayCommand(
@@ -187,6 +187,11 @@ namespace FFBitrateViewer
                 param => { return vm.IsReady && !vm.IsMediaInfoGetRunning && vm.Files.Count > 0; }
             );
 
+            vm.PlayMediaCmd = new RelayCommand(
+                param => { Helpers.RunAssociatedSystemProgram((string?)param); },
+                param => { return !string.IsNullOrEmpty((string?)param); }
+            );
+
             vm.PlotExportToClipboardCmd = new RelayCommand(
                 param =>
                 {
@@ -201,6 +206,11 @@ namespace FFBitrateViewer
                     if (vm.IsReady && !vm.IsPlotEmpty()) ImageFileSaveDialog("Save Image", vm.PlotExport, vm.PlotFileNameGet("svg"));
                 },
                 param => { return vm.IsReady && !vm.IsPlotEmpty(); }
+            );
+
+            vm.ResetAllCmd = new RelayCommand(
+                param => { if (vm.IsReady && vm.FilesCountWithFrames() > 0) vm.FilesFramesClear(); },
+                param => { return vm.IsReady && vm.FilesCountWithFrames() > 0; }
             );
 
             Log.Write(LogLevel.DEBUG, "InitializeCommands finished");
@@ -224,7 +234,7 @@ namespace FFBitrateViewer
 
         private void ImageFileSaveDialog(string title, Action<string> fnSave, string? fs = null)
         {
-            string ext = string.IsNullOrEmpty(fs) ? "png" : Path.GetExtension(fs).TrimStart('.').ToLower();
+            string ext = string.IsNullOrEmpty(fs) ? "png" : Path.GetExtension(fs).TrimStart('.');
             var filter = "PNG files|*.png|SVG files|*.svg|All files|*.*";
             var filterIndex = 1;
             var parts = filter.Split("|");
@@ -232,7 +242,7 @@ namespace FFBitrateViewer
             for (int i = 0; i < parts.Length; i++)
             {
                 if (i % 2 == 0) continue; // Ignore filter labels such as "PNG Files"
-                if (parts[i][^ext.Length..].ToLower() == ext)
+                if (parts[i][^ext.Length..].Equals(ext, StringComparison.CurrentCultureIgnoreCase))
                 {
                     filterIndex = index;
                     break;
@@ -436,6 +446,42 @@ namespace FFBitrateViewer
             target.Item.SetValue(DragDropHighlighter.IsDroppingBelowProperty, show == true && target.Index != null &&  isBelow);
 
             return target;
+        }
+
+
+        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (Mouse.LeftButton == MouseButtonState.Released)
+            {
+                var tb = sender as TextBox;
+                if (tb == null) return;
+                tb.SelectAll();
+                tb.Tag = true; // Use the tag propety to signal that the box is already focused
+            }
+        }
+
+
+        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            var tb = sender as TextBox;
+            if (tb == null) return;
+            tb.SelectionLength = 0;
+            tb.Tag = false; // Use the tag propety to signal that the box is already focused
+
+        }
+
+
+        private void TextBox_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            // If a user clicked in, want to select all text, unless they made a different selection...
+            // So select all only if the textbox isn't already focused, and the user hasn't selected any text.
+            var tb = sender as TextBox;
+            if(tb == null) return;
+            if ((tb.Tag == null || (bool)tb.Tag == false) && tb.SelectionLength == 0)
+            {
+                tb.SelectAll();
+                tb.Tag = true; // Use the tag propety to signal that the box is already focused
+            }
         }
 
     }

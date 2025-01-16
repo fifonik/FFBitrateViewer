@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using HarfBuzzSharp;
+using OxyPlot;
+using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Windows.Input;
-using System.Threading.Channels;
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace FFBitrateViewer
 {
@@ -31,7 +32,7 @@ namespace FFBitrateViewer
         public CancellationTokenSource?                               cancellationTokenSource;
         private readonly Channel<bool>                                filesMediaInfoNotificationChannel = Channel.CreateUnbounded<bool>();
         private readonly ConcurrentQueue<FilesMediaInfoQueueItem>     filesMediaInfoQueue = new();
-        private Task?                                                 filesBitRateInfoGetTask;
+        //private Task?                                                 filesBitRateInfoGetTask;
 
         public VersionInfo? VersionInfo { get { return Get<VersionInfo>();     }    private set { Set(value); } }
         public ObservableCollection<FileItem> Files                   { get;                                      private set; }
@@ -60,14 +61,16 @@ namespace FFBitrateViewer
         public RelayCommand?    FilesClearCmd                       { get; set; }
         public RelayCommand?    FilesRemoveCmd                      { get; set; }
         public RelayCommand?    MediaInfoReloadCmd                  { get; set; }
+        public RelayCommand?    PlayMediaCmd                        { get; set; }
         public RelayCommand?    PlotExportToClipboardCmd            { get; set; }
         public RelayCommand?    PlotExportToFileCmd                 { get; set; }
+        public RelayCommand?    ResetAllCmd                         { get; set; }
 
 
         public MainViewModel()
         {
             VersionInfo             = new();
-            OverallProgress         = new();
+            OverallProgress         = new(true/* indeterminate */);
 
             Files                   = new();
             Files.CollectionChanged += OnFilesCollectionChanged;
@@ -127,14 +130,7 @@ namespace FFBitrateViewer
 
         public bool IsFilesReady()
         {
-            int enabledCount = FilesCountExistAndEnable();
-            return enabledCount > 0 && enabledCount == FilesCountExistAndEnableAndReady();
-        }
-
-
-        public bool IsOptionsReady()
-        {
-            return IsFilesReady();
+            return FilesCountReadyWithoutFrames() > 0;
         }
 
 
@@ -155,7 +151,7 @@ namespace FFBitrateViewer
 
             int idx = Files.Count - 1;
             PlotModel?.SerieSet(null, PlotModel.SerieCreate(file, idx));
-            PlotModel?.Redraw();
+            PlotRedraw();
 
             return true;
         }
@@ -181,7 +177,7 @@ namespace FFBitrateViewer
                     for (var idx = src; idx > dest; --idx) PlotModel?.SerieSet(idx, PlotModel.SerieGet(idx - 1));
                     PlotModel?.SerieSet(dest, temp);
                 }
-                PlotModel?.Redraw();
+                PlotRedraw();
             }
 
             return true;
@@ -203,8 +199,8 @@ namespace FFBitrateViewer
 
             Files.RemoveAt(fileIndex);
 
-            PlotAxesUpdate(true/*force*/);
-            PlotModel?.Redraw();
+            PlotAxesUpdate();
+            PlotRedraw();
             return true;
         }
 
@@ -215,19 +211,26 @@ namespace FFBitrateViewer
         }
 
 
-        public int FilesCountExistAndEnable()
+        public int FilesCountWithFrames()
         {
             int n = 0;
-            foreach (var file in Files) if (file.IsExistsAndEnabled) ++n;
+            foreach (var file in Files) if (file.IsFramesLoaded) ++n;
             return n;
         }
 
 
-        public int FilesCountExistAndEnableAndReady()
+        public int FilesCountReadyWithoutFrames()
         {
             int n = 0;
-            foreach (var file in Files) if (file.IsReady) ++n;
+            foreach (var file in Files) if (file.IsReady && !file.IsFramesLoaded) ++n;
             return n;
+        }
+
+
+        public void FilesFramesClear()
+        {
+            foreach (var file in Files) file.FramesClear();
+            PlotUpdate();
         }
 
 
@@ -258,12 +261,17 @@ namespace FFBitrateViewer
 
         public async void FilesProcess()
         {
-            if (filesBitRateInfoGetTask != null && filesBitRateInfoGetTask.Status == TaskStatus.Running) return;
+            //if (filesBitRateInfoGetTask != null && filesBitRateInfoGetTask.Status == TaskStatus.Running) return;
             IsReady   = false;
             IsRunning = true;
-            OverallProgress?.Show("Processing started");
+            if (OverallProgress != null)
+            {
+                OverallProgress.Max = (int)FilesTotalDurationGet();
+                OverallProgress.Show("Processing started");
+            }
             cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
+            var updated = 0;
             try
             {
                 await Task.Run(() =>
@@ -271,23 +279,24 @@ namespace FFBitrateViewer
                     //var processor = new SynchronousProcessor();
                     for (int idx = 0; idx < Files.Count; ++idx)
                     {
-                        OverallProgress?.Show("Processing file: " + idx);
                         var file = Files[idx];
-                        if (!file.IsExistsAndEnabled) continue;
-                        file.FramesClear();
-                        PlotSerieClear(idx);
-                        var timeFormat = (file.MediaInfo?.Duration < 60 * 60) ? @"mm\:ss" : @"hh\:mm\:ss";
-                        file.FramesGet(cancellationToken, (pos, frame, lineNo) => {
-                            if (lineNo % 1000 == 0) OverallProgress?.Show("Processing file: " + idx + ", time: " + TimeSpan.FromSeconds(frame.StartTime).ToString(timeFormat));
-                        });
+                        if (!file.IsReady || file.IsFramesLoaded) continue;
+                        OverallProgress?.FileProgressSet(idx);
 
-                        if (PlotModel != null)
-                        {
-                            PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
-                            PlotModel.AxisMaximumSet(0, file.FramesMaxXGet(PlotViewType));
-                            PlotModel.AxisMaximumSet(1, file.FramesMaxYGet(PlotViewType));
-                            PlotModel.Redraw();
-                        }
+                        PlotModel?.SeriePointsClear(idx);
+
+                        file.FramesGet(cancellationToken, (pos, frame, line) => {
+                            if (line % 1000 == 0) OverallProgress?.FileProgressSet(idx, frame);
+                        });
+                        if (OverallProgress != null && file.Duration != null) OverallProgress.ProcessedDuration += (double)file.Duration;
+
+                        ++updated;
+
+                        PlotModel?.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
+                        PlotModel?.AxisMaximumSet(0, file.FramesMaxXGet(PlotViewType));
+                        PlotModel?.AxisMaximumSet(1, file.FramesMaxYGet(PlotViewType));
+                        PlotModel?.ResetAllAxes();
+                        PlotRedraw();
 
                         cancellationToken.ThrowIfCancellationRequested();
                     }
@@ -295,7 +304,7 @@ namespace FFBitrateViewer
             }
             catch(Exception ex)
             {
-                // todo@
+                Log.Write(LogLevel.ERROR, "Error processing files: " + ex.Message);
                 Debug.WriteLine("exception", ex.ToString());
             }
             finally
@@ -318,6 +327,13 @@ namespace FFBitrateViewer
                 return true;
             }
             return false;
+        }
+
+        public double FilesTotalDurationGet(bool isIncludeLoaded = false)
+        {
+            double duration = 0;
+            foreach (FileItem file in Files) duration += (isIncludeLoaded || !file.IsFramesLoaded) ? (file.Duration ?? 0) : 0;
+            return duration;
         }
 
 
@@ -379,14 +395,12 @@ namespace FFBitrateViewer
                 switch (e.PropertyName)
                 {
                     case "IsEnabled":
-                    case "FS": // FS should never updated as we are not modifying filespec for existing file (deleting/adding new file instead)
                         int idx = Files.IndexOf(file);
                         if (idx >= 0)
                         {
-                            PlotAxesUpdate(true/*force*/);
                             PlotModel?.SerieRedraw(idx, file.IsEnabled);
+                            PlotUpdate(false/* do not reset axes */);
                         }
-
                         break;
                 }
             }
@@ -424,26 +438,56 @@ namespace FFBitrateViewer
         }
 
 
-        public void PlotAxesUpdate(bool force = false) {
-            if (PlotModel == null) return;
-            if (force)
+        private void PlotAnnotationsUpdate()
+        {
+            if (PlotModel == null || PlotViewType?.ToUpper() == "FRAME") return;
+
+            PlotModel.LineAnnotationsClear();
+
+            FileItem? file = null;
+            foreach (var f in Files)
             {
-                PlotModel.AxisMaximumSet(0);
-                PlotModel.AxisMaximumSet(1);
-                PlotModel.AxesRedraw();
+                if (f.IsExists && f.IsEnabled)
+                {
+                    if (file != null) return;
+                    file = f;
+                }
             }
+
+            if (file == null || !file.IsFramesLoaded) return;
+
+            var maxX = file.FramesMaxXGet(PlotViewType);
+            if (maxX == null) return;
+
+            var birtateAvg = file.BitRateAvg?.GetValue();
+            if (birtateAvg != null) PlotModel.LineAnnotationAdd((double)maxX, (int)birtateAvg, "Average", OxyColors.Gray);
+        }
+
+
+        public void PlotAxesUpdate(bool resetAxes = true) {
+            if (PlotModel == null) return;
+
+            PlotModel.AxisMaximumSet(0);
+            PlotModel.AxisMaximumSet(1);
+
             double maxX = -1;
             int    maxY = -1;
             foreach (var file in Files)
             {
-                if (!file.IsExistsAndEnabled) continue;
+                if (!(file.IsExists && file.IsEnabled)) continue;
+
                 var x = file.FramesMaxXGet(PlotViewType);
                 if (x != null && x > maxX) maxX = (double)x;
+
                 int? y = file.FramesMaxYGet(PlotViewType);
                 if (y != null && y > maxY) maxY = (int)y;
             }
-            if (maxX > 0 && PlotModel.AxisMaximumSet(0, maxX)) PlotModel.AxisRedraw(0);
-            if (maxY > 0 && PlotModel.AxisMaximumSet(1, maxY)) PlotModel.AxisRedraw(1);
+            var updated = 0;
+            if (maxX > 0 && PlotModel.AxisMaximumSet(0, maxX)) ++updated;
+            if (maxY > 0 && PlotModel.AxisMaximumSet(1, maxY)) ++updated;
+
+            if(resetAxes) PlotModel.ResetAllAxes();
+            PlotModel.Redraw();
         }
 
 
@@ -470,45 +514,37 @@ namespace FFBitrateViewer
         }
 
 
-        public bool PlotSerieAddPoint(int fileIndex, double x, int y, int? pos = null)
+        //public bool PlotSerieAddPoint(int fileIndex, double x, int y, int? pos = null)
+        //{
+        //    if (PlotModel == null) return false;
+        //    return PlotModel.SeriePointAdd(fileIndex, x, y, pos) == true;
+        //}
+
+
+        public void PlotRedraw()
         {
-            return PlotModel?.SeriePointAdd(fileIndex, x, y, pos) == true;
+            if (PlotModel == null) return;
+            PlotAnnotationsUpdate();
+            PlotModel.Redraw();
         }
 
 
-        public void PlotSerieClear(int fileIndex)
+        public void PlotUpdate(bool resetAxes = true)
         {
-            PlotModel?.SeriePointsClear(fileIndex);
-        }
+            if (PlotModel == null) return;
 
+            PlotModel.LineAnnotationsClear();
 
-        public void PlotUpdate()
-        {
-            if(PlotModel == null) return;
-
-            PlotModel.AxisMaximumSet(0);
-            PlotModel.AxisMaximumSet(1);
-
-            double maxX = -1;
-            int    maxY = -1;
-            for (int idx = 0; idx < Files.Count; ++idx){
+            for (int idx = 0; idx < Files.Count; ++idx) {
                 var file = Files[idx];
-                if (!file.IsExistsAndEnabled) continue;
+                if (!(file.IsExists && file.IsEnabled)) continue;
 
-                PlotSerieClear(idx);
-
-                var x = file.FramesMaxXGet(PlotViewType);
-                if (x != null && x > maxX) maxX = (double)x;
-                int? y = file.FramesMaxYGet(PlotViewType);
-                if (y != null && y > maxY) maxY = (int)y;
+                PlotModel.SeriePointsClear(idx);
 
                 PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
             }
 
-            if (maxX > 0 && PlotModel.AxisMaximumSet(0, maxX)) PlotModel.AxisRedraw(0);
-            if (maxY > 0 && PlotModel.AxisMaximumSet(1, maxY)) PlotModel.AxisRedraw(1);
-
-            PlotModel.Redraw();
+            PlotAxesUpdate(resetAxes);
         }
 
 

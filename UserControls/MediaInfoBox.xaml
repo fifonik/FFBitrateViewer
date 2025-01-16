@@ -11,6 +11,7 @@
     d:DesignWidth="400"
 >
     <UserControl.Resources>
+        <project:FramesCountConverter                x:Key="FramesCount" />
         <project:MediaInfoBitRateConverter           x:Key="MediaInfoBitRate" />
         <project:MediaInfoColorSpaceFullConverter    x:Key="MediaInfoColorSpaceFull" />
         <project:MediaInfoColorRangeConverter        x:Key="MediaInfoColorRange" />
@@ -22,7 +23,6 @@
         <project:MediaInfoStreamDurationConverter    x:Key="MediaInfoStreamDuration" />
         <project:MediaInfoStreamStartConverter       x:Key="MediaInfoStreamStart" />
         <project:MediaInfoFieldTypeConverter         x:Key="MediaInfoFieldType" />
-        <project:MediaInfoFramesCountConverter       x:Key="MediaInfoFramesCount" />
         <project:MediaInfoFrameRateConverter         x:Key="MediaInfoFrameRate" />
         <project:MediaInfoResolutionConverter        x:Key="MediaInfoResolution" />
         <project:MediaInfoStreamsInfoConverter       x:Key="MediaInfoStreamsInfo" />
@@ -78,7 +78,7 @@
             <StackPanel Orientation="Vertical">
                 <DockPanel>
                     <Label Content="Frames count:"></Label>
-                    <TextBlock Text="{Binding Path=FramesCount, Mode=OneWay, Converter={StaticResource MediaInfoFramesCount}}"/>
+                    <TextBlock Text="{Binding Path=FramesCount, Mode=OneWay, Converter={StaticResource FramesCount}}"/>
                 </DockPanel>
                 <DockPanel>
                     <Label Content="Frame rate:"></Label>

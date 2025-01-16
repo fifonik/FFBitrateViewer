@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <StartupObject>FFBitrateViewer.App</StartupObject>
-    <Version>0.9.0.1</Version>
+    <Version>0.9.1.1</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Description>FFBitrateViewer -- FFProbe GUI</Description>
     <Copyright>Copyright © 2025 / Fifonik</Copyright>
@@ -16,14 +16,15 @@
     <AssemblyTitle>FFBitrateViewer -- FFProbe GUI</AssemblyTitle>
     <SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
     <PlatformTarget>x64</PlatformTarget>
+    <SignAssembly>False</SignAssembly>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>none</DebugType>
+    <DebugType>full</DebugType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
+    <DebugType>full</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

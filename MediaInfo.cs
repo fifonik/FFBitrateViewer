@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -100,19 +101,29 @@ namespace FFBitrateViewer
         }
 
 
+        private bool IsConvertToK()
+        {
+            var unit = Unit ?? unitDefault;
+            return (unit != null && unit == unitDefault && unit.Length > 1);
+        }
+
+
+        public int GetValue()
+        {
+            return IsConvertToK() ? (int)Math.Round((double)Value / 1000) : Value;
+        }
+
+
+        public string GetUnit()
+        {
+            return (IsConvertToK() ? "k" : "") + (Unit ?? unitDefault);
+        }
+
+
         public virtual string ToString(char separator = ' ')
         {
-            var value = Value;
-            var unit  = Unit ?? unitDefault;
-
-            if (unit != null && unit == unitDefault && unit.Length > 1)
-            {
-                // Converting * to k*
-                value = (int)Math.Round((double)value / 1000);
-                unit = "k" + unit;
-            }
-
-            return value.ToString() + (string.IsNullOrEmpty(unit) ? "" : separator + unit);
+            var unit  = GetUnit();
+            return GetValue().ToString() + (string.IsNullOrEmpty(unit) ? "" : separator + unit);
         }
 
     }

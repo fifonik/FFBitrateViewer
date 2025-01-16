@@ -1,6 +1,7 @@
 ﻿using OxyPlot;
-using OxyPlot.Series;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
+using OxyPlot.Series;
 using OxyPlot.Legends;
 using System.Collections.Generic;
 
@@ -280,6 +281,26 @@ namespace FFBitrateViewer
         }
 
 
+        public void LineAnnotationAdd(double maxX, int y, string text, OxyColor color)
+        {
+            var annotation = new LineAnnotation();
+            annotation.Type = LineAnnotationType.Horizontal;
+            annotation.TextVerticalAlignment = VerticalAlignment.Bottom;
+            annotation.TextLinePosition = 0.04;
+            annotation.Y = y;
+            annotation.MaximumX = maxX;
+            annotation.Color = color;
+            annotation.Text = text;
+            Annotations.Add(annotation);
+        }
+
+
+        public void LineAnnotationsClear()
+        {
+            Annotations.Clear();
+        }
+
+
         public bool AxisMaximumSet(int index, double? value = null)
         {
             if (index < 0 || index >= Axes.Count) return false;
@@ -374,22 +395,28 @@ namespace FFBitrateViewer
         }
 
 
-        public void AxesRedraw()
-        {
-            for (int axisIndex = 0; axisIndex < Axes.Count; ++axisIndex) AxisRedraw(axisIndex);
-        }
+        //public void AxesRedraw()
+        //{
+        //    for (int axisIndex = 0; axisIndex < Axes.Count; ++axisIndex) AxisRedraw(axisIndex);
+        //}
 
 
-        public void AxisRedraw(int idx)
-        {
-            ((MyPlotModel)Axes[idx].PlotModel).Redraw();
-        }
+        //public void AxisRedraw(int idx)
+        //{
+        //    ((MyPlotModel)Axes[idx].PlotModel).Redraw();
+        //}
 
 
         public bool IsEmpty()
         {
-            foreach (var serie in Series) if (((StairStepSeries)serie).Points.Count > 0) return false;
+            foreach (var serie in Series) if (!IsSerieEmpty(serie)) return false;
             return true;
+        }
+
+
+        private bool IsSerieEmpty(Series serie)
+        {
+            return ((StairStepSeries)serie).Points.Count == 0;
         }
 
 
@@ -397,7 +424,7 @@ namespace FFBitrateViewer
         {
             var serie = new StairStepSeries
             {
-                IsVisible               = file.IsExistsAndEnabled,
+                IsVisible               = file.IsExists && file.IsEnabled,
                 StrokeThickness         = 1.5,
                 Title                   = file.FN,
                 TrackerFormatString     = TrackerFormatStringBuild(),
@@ -441,15 +468,6 @@ namespace FFBitrateViewer
             bool changed = visible != null && serie.IsVisible != (bool)visible;
             if (changed) serie.IsVisible = (visible == true);
             if (changed || force) ((MyPlotModel)serie.PlotModel).Redraw();
-        }
-
-
-        public bool SeriePointAdd(int idx, double x, int y, int? pos = null)
-        {
-            var serie = SerieGet(idx);
-            if (pos == null || (serie?.Points.Count ?? 0) == 0) serie?.Points.Add(new DataPoint(x, y));
-            else serie?.Points.Insert((int)pos, new DataPoint(x, y));
-            return true;
         }
 
 
