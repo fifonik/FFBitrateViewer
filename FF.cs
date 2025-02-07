@@ -406,7 +406,7 @@ namespace FFBitrateViewer
 
             if (data.Format?.StartTime != null) info.StartTime = (double)data.Format.StartTime;
 
-            if (data.Format?.BitRate != null) info.BitRate = new BitRate((int)data.Format.BitRate);
+            if (data.Format?.BitRate != null) info.BitRate = new BitRate((long)data.Format.BitRate);
 
             if (data.Streams != null)
             {

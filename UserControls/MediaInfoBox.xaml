@@ -19,6 +19,7 @@
         <project:MediaInfoFileBitRateConverter       x:Key="MediaInfoFileBitRate" />
         <project:MediaInfoFileDurationConverter      x:Key="MediaInfoFileDuration" />
         <project:MediaInfoFileStartConverter         x:Key="MediaInfoFileStart" />
+        <project:MediaInfoPixelFormatConverter         x:Key="MediaInfoPixelFormat" />
         <project:MediaInfoStreamBitRateConverter     x:Key="MediaInfoStreamBitRate" />
         <project:MediaInfoStreamDurationConverter    x:Key="MediaInfoStreamDuration" />
         <project:MediaInfoStreamStartConverter       x:Key="MediaInfoStreamStart" />
@@ -112,6 +113,11 @@
                 <DockPanel>
                     <Label Content="Field type:"></Label>
                     <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFieldType}}"/>
+                </DockPanel>
+
+                <DockPanel>
+                    <Label Content="Pixel format:"></Label>
+                    <TextBlock Text="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoPixelFormat}}"/>
                 </DockPanel>
 
                 <DockPanel>

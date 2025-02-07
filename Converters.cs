@@ -279,6 +279,18 @@ namespace FFBitrateViewer
     }
 
 
+    public class MediaInfoPixelFormatConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string? s = value is MediaInfo info ? info.Video0?.Format?.ToString(VideoStreamFormatToStringMode.PIXEL_FORMAT) : null;
+            return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
+
     public class MediaInfoResolutionConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

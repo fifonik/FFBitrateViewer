@@ -8,7 +8,7 @@ namespace FFBitrateViewer
     public class FFProbeFormat
     {
         [JsonProperty("bit_rate")]
-        public int? BitRate { get; set; }
+        public long? BitRate { get; set; }
 
         /// <summary>Approximate duration in seconds (stream can start *after* the 00:00:00 timecode).</summary>
         [JsonProperty("duration")]

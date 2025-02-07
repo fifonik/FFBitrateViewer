@@ -1,4 +1,3 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -128,6 +127,77 @@ namespace FFBitrateViewer
 
     }
 
+    public class ULong
+    {
+        public string? unitDefault = null;
+        public long    Value { get; set; }
+        public string? Unit  { get; set; }
+
+
+        public ULong(long value, string? unit = null) { 
+            Value = value; 
+            Unit  = unit;
+        }
+
+
+        public static ULong? Find(string item, Regex regex)
+        {
+            Match m = regex.Match(item);
+            if (m.Success && long.TryParse(m.Groups[1].Value, out long value)) return new ULong(value, m.Groups[2].Value);
+            return null;
+        }
+
+
+        public static ULong? Find(List<string> items, Regex regex)
+        {
+            foreach (string item in items)
+            {
+                ULong? v = Find(item, regex);
+                if (v != null) return v;
+            }
+            return null;
+        }
+
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode() ^ (Unit ?? "").GetHashCode();
+        }
+
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ULong other && Value == other.Value && Unit == other.Unit;
+        }
+
+
+        private bool IsConvertToK()
+        {
+            var unit = Unit ?? unitDefault;
+            return (unit != null && unit == unitDefault && unit.Length > 1);
+        }
+
+
+        public long GetValue()
+        {
+            return IsConvertToK() ? (long)Math.Round((double)Value / 1000) : Value;
+        }
+
+
+        public string GetUnit()
+        {
+            return (IsConvertToK() ? "k" : "") + (Unit ?? unitDefault);
+        }
+
+
+        public virtual string ToString(char separator = ' ')
+        {
+            var unit  = GetUnit();
+            return GetValue().ToString() + (string.IsNullOrEmpty(unit) ? "" : separator + unit);
+        }
+
+    }
+
 
     public class UDouble
     {
@@ -185,9 +255,9 @@ namespace FFBitrateViewer
     }
 
 
-    public class BitRate : UInt
+    public class BitRate : ULong
     {
-        public BitRate(int value, string? unit = null) : base(value, unit) {
+        public BitRate(long value, string? unit = null) : base(value, unit) {
             unitDefault = "b/s";
         }
     }
