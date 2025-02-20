@@ -39,6 +39,24 @@ Well, and play with interactive graphs (powered by OxyPlot):
 - Click “Start” button.
 
 
+## How to run with command line options
+**FFBitrateViewer.exe \[options\] c:\path\to\file1.mp4 \[c:\path\to\file2.mp4\] \[c:\path\to\file3.mp4\] \[...\]**
+
+### Accepted options
+	-adjust-start-time-on-plot             Default: false
+	-log-commands                          Log FFProbe commands
+	-log-level=DEBUG|ERROR|INFO            Default: INFO
+	-plot-view-type=FRAME|SECOND|GOP       Default: FRAME
+	-run                                   Run calculation when program started
+	-temp-dir=dirspec                      Default: default user temporary directory
+
+All options can be provided using single leading dash (-option) or double leading dash (--option).
+
+#### Examples
+`FFBitrateViewer.exe c:\path\to\file.mp4`<br />
+`FFBitrateViewer.exe -adjust-start-time-on-plot -plot-view-type=SECOND "c:\path\to\my file.mp4"`<br />
+
+
 ## Troubleshooting
 - Close FFBitrateViewer and delete `FFBitrateViewer.log`;
 - Run the program with option `-log-level=debug`;

@@ -33,7 +33,7 @@ namespace FFBitrateViewer
 
         public bool?            AdjustStartTimeOnPlot { get; set; }
         public bool?            LogCommands           { get; set; }
-        public string?          PlotViewType          { get; set; }
+        public string?          PlotViewType          { get; set; } = "frame";
         public string?          TempDir               { get; set; }
         //[JsonProperty("files")]
         public List<FileItemPO> Files                 { get; set; }
@@ -53,7 +53,7 @@ namespace FFBitrateViewer
             }
             if (options.AdjustStartTimeOnPlot != null) AdjustStartTimeOnPlot = options.AdjustStartTimeOnPlot;
             if (options.LogCommands != null)           LogCommands           = options.LogCommands;
-            if (options.PlotViewType != null)          PlotViewType = options.PlotViewType;
+            if (options.PlotViewType != null)          PlotViewType          = options.PlotViewType;
         }
 
 
@@ -127,14 +127,14 @@ namespace FFBitrateViewer
 
 
     // FFBitrateViewer.exe
-    // [-adjust-start-time-on-plot]
-    // [-exit]
-    // [-log-commands]
-    // [-log-level=(DEBUG|ERROR|INFO|WARNING)]
-    // [-plot-view-type=(frame|second|gop)]
-    // [-run]
-    // [-temp-dir=<dirspec>]
-    // /path/to/file1.mp4 [/path/to/file2.mp4] [...]
+    //   [-adjust-start-time-on-plot]
+    //   [-exit]
+    //   [-log-commands]
+    //   [-log-level=(DEBUG|ERROR|INFO|WARNING)]
+    //   [-plot-view-type=(frame|second|gop)]
+    //   [-run]
+    //   [-temp-dir=<dirspec>]
+    //   /path/to/file1.mp4 [/path/to/file2.mp4] [...]
 
     public class ArgsOptions : ProgramOptions
     {

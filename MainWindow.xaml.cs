@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -52,6 +53,7 @@ namespace FFBitrateViewer
             bool logCommands;
             if (argsOptions.IsFilled)
             {
+                programOptions.Add(argsOptions);
                 logCommands = argsOptions.LogCommands == true;
             }
             else
@@ -59,7 +61,6 @@ namespace FFBitrateViewer
                 programOptions = ProgramOptions.LoadFromSettings();
                 logCommands = programOptions.LogCommands == true;
             }
-            if (!string.IsNullOrEmpty(argsOptions.TempDir)) Global.SetTempDir(argsOptions.TempDir);
 
             Log.Init(new Logger(argsOptions.LogLevel, FileSpecBuild("log"), true/*append*/, true/*add timestamp*/, true/*auto flush*/), logCommands || argsOptions.LogLevel == LogLevel.DEBUG);
 
@@ -86,6 +87,9 @@ namespace FFBitrateViewer
                     Log.Close();
                 }
             }
+
+            if (!string.IsNullOrEmpty(argsOptions.TempDir)) Global.SetTempDir(argsOptions.TempDir);
+
             FF.Init(programConfig);
 
             /*
@@ -120,6 +124,13 @@ namespace FFBitrateViewer
                     if (!vm.IsRunning && vm.IsReady && vm.IsFilesReady())
                     {
                         vm.FilesProcess();
+                    }
+                    if (argsOptions.IsFilled && argsOptions.Run && argsOptions.Exit)
+                    {
+                        Application.Current.Dispatcher.Invoke(delegate
+                        {
+                            vm.ExitCmd.Execute(null);
+                        });
                     }
                 },
                 param => { return !vm.IsRunning && vm.IsReady && vm.IsFilesReady(); }
