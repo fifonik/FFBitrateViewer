@@ -201,7 +201,7 @@ namespace FFBitrateViewer
 
     public class UDouble
     {
-        public double Value { get; set; }
+        public double  Value { get; set; }
         public string? Unit  { get; set; }
 
 
@@ -465,6 +465,8 @@ namespace FFBitrateViewer
             if (d == null) return null;
             return RemoveZeroes.Replace(((double)d).ToString("0.000", CultureInfo.InvariantCulture), "");
         }
+
+
         public double? ToDouble() { return Numerator > 0 && Denominator > 0 ? (double)Numerator / Denominator : null; }
     }
 

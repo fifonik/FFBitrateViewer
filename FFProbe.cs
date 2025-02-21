@@ -103,8 +103,9 @@ namespace FFBitrateViewer
         [JsonProperty("pix_fmt")]
         public string? PixFmt { get; set; }
 
+        // Can be ordered by the field if no time
         [JsonProperty("pkt_pos")]
-        public int? Pos { get; set; }
+        public long? Pos { get; set; }
 
         [JsonProperty("pkt_pts")]
         public int? PTS { get; set; }
@@ -158,6 +159,10 @@ namespace FFBitrateViewer
 
         [JsonProperty("flags")]
         public string? Flags { get; set; }
+
+        // Can be ordered by the field if no time
+        [JsonProperty("pos")]
+        public long? Pos { get; set; }
 
         // presentation time stamp -- how packets should be displayed
         [JsonProperty("pts")]

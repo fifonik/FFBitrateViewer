@@ -87,15 +87,74 @@ namespace FFBitrateViewer
     }
 
 
+    public class FramesAverageFrameRateConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Frames frames && frames.Count > 0 && frames.FramesDuration > 0)
+            {
+                return Math.Round((frames.Count / (double)frames.FramesDuration), 6).ToString() + " fps";
+            }
+            return ConverterHelper.NA;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
     public class FramesCountConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is int i) ? i : ConverterHelper.NA;
+            return (value is Frames frames) ? frames.Count : ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
 
+
+    public class FramesDurationConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Frames frames && frames.FramesDuration > 0)
+            {
+                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesDuration, 2)).ToString(@"hh\:mm\:ss\.ff");
+                if (result != "00:00:00.00") return result;
+            }
+            return ConverterHelper.NA;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
+    public class FramesEndTimeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Frames frames && frames.FramesEndTime != null)
+            {
+                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesEndTime, 2)).ToString(@"hh\:mm\:ss\.ff");
+                if (result != "00:00:00.00") return result;
+            }
+            return ConverterHelper.NA;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
+
+    public class FramesStartTimeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Frames frames && frames.FramesStartTime != null)
+            {
+                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesStartTime, 2)).ToString(@"hh\:mm\:ss\.ff");
+                if (result != "00:00:00.00") return result;
+            }
+            return ConverterHelper.NA;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
+    }
 
     public class BitrateFilledToBooleanConverter : IValueConverter
     {
@@ -202,7 +261,7 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string? s = value is MediaInfo info && info.Video0?.FrameRateAvg != null ? (info.Video0?.FrameRateAvg?.ToString() + " fps (" + info.Video0?.FrameRateAvg?.Value + ")"): null;
+            string? s = value is MediaInfo info && info.Video0?.FrameRateAvg != null ? (info.Video0?.FrameRateAvg?.ToString() + " fps (" + info.Video0?.FrameRateAvg?.Value + ")") : null;
             return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 

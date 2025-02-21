@@ -368,7 +368,7 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header=" Media info" Width="140" x:Name="GridViewColMediaInfo">
+                            <GridViewColumn Header=" Media info" Width="165" x:Name="GridViewColMediaInfo">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="-5,0" Width="{Binding ElementName=GridViewColMediaInfo, Path=ActualWidth, Mode=OneWay}">
@@ -376,11 +376,11 @@
                                             <ProgressBar Style="{StaticResource FileProgressBar}" IsIndeterminate="{Binding Path=IsMediaInfoLoading, Mode=OneWay}" Visibility="{Binding Path=IsMediaInfoLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}"/>
                                             <Label VerticalContentAlignment="Center" Padding="0" FontSize="13"
                                                 Content="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource MediaInfoFrameInfoCompact}}"
-                                                ToolTipService.ShowDuration="20000"
+                                                ToolTipService.ShowDuration="60000"
                                             >
                                                 <Label.ToolTip>
                                                     <ToolTip Visibility="{Binding Path=MediaInfo, Mode=OneWay, Converter={StaticResource NotNullVisible}}">
-                                                        <uc:MediaInfoBox MediaInfo="{Binding Path=MediaInfo, Mode=OneWay}" FramesCount="{Binding Path=FramesCount, Mode=OneWay}" />
+                                                        <uc:MediaInfoBox MediaInfo="{Binding Path=MediaInfo, Mode=OneWay}" Frames="{Binding Path=Frames, Mode=OneWay}" />
                                                     </ToolTip>
                                                 </Label.ToolTip>
                                             </Label>
@@ -403,7 +403,7 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid Margin="-2,0" Width="{Binding ElementName=GridViewColFrames, Path=ActualWidth, Mode=OneWay}" HorizontalAlignment="Right">
-                                            <TextBlock Text="{Binding Path=FramesCount, Mode=OneWay, Converter={StaticResource FramesCount}}" FontSize="13" VerticalAlignment="Center" TextAlignment="Right" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{Binding Path=Frames, Mode=OneWay, Converter={StaticResource FramesCount}}" FontSize="13" VerticalAlignment="Center" TextAlignment="Right" HorizontalAlignment="Right" />
                                         </Grid>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>

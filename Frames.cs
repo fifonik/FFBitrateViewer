@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using OxyPlot;
+﻿using OxyPlot;
 using System;
 using System.Collections.Generic;
-using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace FFBitrateViewer
 {
@@ -28,28 +26,30 @@ namespace FFBitrateViewer
         public double         EndTime      { get { return StartTime + Duration; } }
         public FramePictType? FrameType    { get; set; } // I, P, B
         public bool           IsOrdered    { get; set; }
+        public long?          Pos          { get; set; }
         public int            Size         { get; set; } // Frame size in bytes
-        //public int            SizeInGOP    { get; set; }
-        public double         StartTime    { get; set; }
+        public double         StartTime    { get { return StartTimeRaw ?? 0; } }
+        public double?        StartTimeRaw { get; set; }
 
 
         public static Frame? CreateFrame(FFProbePacket packet)
         {
-            if (packet.DurationTime == null || packet.Size == null || packet.PTSTime == null) return null;
+            if (packet.DurationTime == null || packet.Size == null) return null;
             return new Frame()
             {
-                Duration  = (double)packet.DurationTime,
-                FrameType = packet.Flags?.IndexOf("K") >= 0 ? FramePictType.I : null,
-                IsOrdered = false, // 'Packets' returned by FFProbe are ordered by DTS, not PTS so will need to order them later when adding onto list
-                Size      = (int)packet.Size,
-                StartTime = (double)packet.PTSTime
+                Duration     = (double)packet.DurationTime,
+                FrameType    = packet.Flags?.IndexOf("K") >= 0 ? FramePictType.I : null,
+                IsOrdered    = false, // 'Packets' returned by FFProbe are ordered by DTS, not PTS so will need to order them later when adding onto list
+                Pos          = packet.Pos,
+                Size         = (int)packet.Size,
+                StartTimeRaw = packet.PTSTime
             };
         }
 
 
         public static Frame? CreateFrame(FFProbeFrame frame)
         {
-            if (frame.DurationTime == null || frame.Size == null || (frame.BestEffortTimestampTime == null && frame.PTSTime == null)) return null;
+            if (frame.DurationTime == null || frame.Size == null) return null;
 
             FramePictType? pictType = frame.PictType?[0] switch
             {
@@ -61,11 +61,12 @@ namespace FFBitrateViewer
 
             return new Frame()
             {
-                Duration  = (double)frame.DurationTime,
-                FrameType = pictType,
-                IsOrdered = true, // 'Frames' returned by FFProbe are already ordered by BestEffortTimestampTime
-                Size      = (int)frame.Size,
-                StartTime = frame.BestEffortTimestampTime ?? frame.PTSTime ?? 0
+                Duration     = (double)frame.DurationTime,
+                FrameType    = pictType,
+                IsOrdered    = true, // 'Frames' returned by FFProbe are already ordered by BestEffortTimestampTime
+                Pos          = frame.Pos,
+                Size         = (int)frame.Size,
+                StartTimeRaw = frame.BestEffortTimestampTime ?? frame.PTSTime
             };
         }
 
@@ -103,11 +104,12 @@ namespace FFBitrateViewer
         public  int         BitRate           { get { return Duration == 0 ? 0 : (int)double.Round(Size / (double)Duration); } }
         public  double      Duration          { get { return DurationFixed ?? DurationFrames ?? 0; } }
         public  double?     DurationFixed     { get; private set; } // NULL -- for normal GOPs, not NULL for fixed length GOPs as 'second'
-        public  double?     DurationFrames    { get { return _frames.Count == 0 ? null : double.Abs(_frames[^1].EndTime - _frames[0].StartTime); } }
+        public  double?     DurationFrames    { get { return FramesCount == 0 ? null : double.Abs(_frames[^1].EndTime - _frames[0].StartTime); } }
         public  double      EndTime           { get { return EndTimeFixed ?? EndTimeFrames ?? 0; } }
         public  double?     EndTimeFixed      { get { return DurationFixed == null ? null : StartTime + DurationFixed; } }
         public  double?     EndTimeFrames     { get { return DurationFrames == null ? null : StartTime + DurationFrames; } }
         public  int         Size              { get; private set; } = 0;
+        public  int         FramesCount       { get { return _frames.Count; } }
         public  double      StartTime         { get; private set; }
 
         public GOP(double startTime, double? duration = null) {
@@ -135,13 +137,13 @@ namespace FFBitrateViewer
             {
                 if (frame.FrameType == FramePictType.I)
                 {
-                    if (_frames.Count > 0) throw new ArgumentException("I-frame can only be the first in GOP");
+                    if (FramesCount > 0) throw new ArgumentException("I-frame can only be the first in GOP");
                 }
                 else
                 {
                     // No exception as frames could be added out of order
                     // So it is possible that P-frame will be added 1st and then I-frame with smaller start time will be added 2nd
-                    // if (_frames.Count == 0) throw new ArgumentException("First frame in GOP must be I-frame");
+                    // if (FramesCount == 0) throw new ArgumentException("First frame in GOP must be I-frame");
                 }
             }
             _frames.Add(frame);
@@ -157,7 +159,7 @@ namespace FFBitrateViewer
         public List<DataPoint> DataPointsGet(double startTimeOffset, int sizeDivider = 1000 /* kB */)
         {
             List<DataPoint> data = new();
-            if (_frames.Count == 0) return data;
+            if (FramesCount == 0) return data;
 
             var bitRate = (int)double.Round(8 /* bit => byte */ * (double)BitRate / (double)sizeDivider);
             data.Add(new DataPoint(StartTime - startTimeOffset, bitRate));
@@ -170,6 +172,7 @@ namespace FFBitrateViewer
 
     public class Frames
     {
+        private bool        _isCalcStartTime             {  get; set; } = false;
         private List<Frame> _frames                      { get; set; } = new();
         private List<GOP>   _framesByGOP                 { get; set; } = new();
         private List<GOP>   _framesByTime                { get; set; } = new();
@@ -180,9 +183,12 @@ namespace FFBitrateViewer
         private int         _maxSizeTime                 { get; set; } = 0;
 
         public bool         IsAdjustStartTime            { get; private set; } = true;
-        public double?      Duration                     { get { return _frames.Count > 0 ? (_frames[^1].EndTime - (IsAdjustStartTime ? StartTime : 0)) : null; } }
-        public int?         FramesCount                  { get { return _frames.Count; } }
+        public double?      Duration                     { get { return Count > 0 ? (_frames[^1].EndTime - (IsAdjustStartTime ? StartTime : 0)) : null; } }
+        public int          Count                        { get { return _frames.Count; } }
         public double       StartTime                    { get; set; } = 0;
+        public double?      FramesDuration               { get { return Count > 0 ? double.Abs(_frames[^1].EndTime - _frames[0].StartTime) : null; } }
+        public double?      FramesEndTime                { get { return Count > 0 ? _frames[^1].EndTime : null; } }
+        public double?      FramesStartTime              { get { return Count > 0 ? _frames[0].StartTime : null; } }
 
 
         public int Add(Frame frame, bool? isForceOrder = null)
@@ -198,10 +204,17 @@ namespace FFBitrateViewer
             else
             {
                 _frames.Add(frame);
-                return _frames.Count - 1;
+                return Count - 1;
             }
         }
 
+        public void Analyze()
+        {
+            if (_isCalcStartTime)
+            {
+                CalcFramesStartTime(0);
+            }
+        }
 
         public void Clear()
         {
@@ -414,12 +427,38 @@ namespace FFBitrateViewer
         private int PosFind(Frame frame)
         {
             // Searching position from the end as usually the frame that we are adding will be somewhere close to the end (but not always the last)
-            for (int idx = _frames.Count - 1; idx >= 0; --idx)
+            // todo@ should probably stop loop if found key frame
+            if (frame.StartTimeRaw == null)
             {
-                // todo@ should probably stop if found key frame
-                if (frame.StartTime > _frames[idx].StartTime) return idx + 1;
+                // Frame does not have StartTime, use Pos instead and will re-calculate all frames StartTime later
+                _isCalcStartTime = true;
+                for (int idx = _frames.Count - 1; idx >= 0; --idx)
+                {
+                    if (frame.Pos > _frames[idx].Pos) return idx + 1;
+                }
+            }
+            else
+            {
+                for (int idx = _frames.Count - 1; idx >= 0; --idx)
+                {
+                    if (frame.StartTime > _frames[idx].StartTime) return idx + 1;
+                }
             }
             return 0;
+        }
+
+        private void CalcFramesStartTime(double startTime = 0)
+        {
+            for (int idx = 0; idx < _frames.Count; ++idx)
+            {
+                if(_frames[idx].StartTimeRaw != null)
+                {
+                    startTime = (double)_frames[idx].EndTime;
+                    continue;
+                }
+                _frames[idx].StartTimeRaw = startTime;
+                startTime += _frames[idx].Duration;
+            }
         }
     }
 }

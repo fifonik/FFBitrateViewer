@@ -104,7 +104,7 @@ namespace FFBitrateViewer
 
         private void IsAdjustOffsetOnPlotUpdated()
         {
-            foreach (var file in Files) file.FramesIsAdjustStartTimeSet(IsAdjustStartTimeOnPlot);
+            foreach (var file in Files) file.IsAdjustStartTime = IsAdjustStartTimeOnPlot;
             PlotUpdate();
         }
 
@@ -145,7 +145,7 @@ namespace FFBitrateViewer
             if (!IsFileCanBeAdded(fs)) return false;
 
             var file = new FileItem(fs, enabled);
-            file.FramesIsAdjustStartTimeSet(IsAdjustStartTimeOnPlot);
+            file.IsAdjustStartTime = IsAdjustStartTimeOnPlot;
 
             Files.Add(file);
 
@@ -440,9 +440,11 @@ namespace FFBitrateViewer
 
         private void PlotAnnotationsUpdate()
         {
-            if (PlotModel == null || PlotViewType?.ToUpper() == "FRAME") return;
+            if (PlotModel == null) return;
 
             PlotModel.LineAnnotationsClear();
+
+            if (PlotViewType?.ToUpper() == "FRAME") return;
 
             FileItem? file = null;
             foreach (var f in Files)
@@ -533,8 +535,6 @@ namespace FFBitrateViewer
         {
             if (PlotModel == null) return;
 
-            PlotModel.LineAnnotationsClear();
-
             for (int idx = 0; idx < Files.Count; ++idx) {
                 var file = Files[idx];
                 if (!(file.IsExists && file.IsEnabled)) continue;
@@ -543,6 +543,8 @@ namespace FFBitrateViewer
 
                 PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
             }
+
+            PlotAnnotationsUpdate();
 
             PlotAxesUpdate(resetAxes);
         }

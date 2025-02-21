@@ -8,11 +8,20 @@ using System.Threading;
 
 namespace FFBitrateViewer
 {
+    public enum PropInfoType
+    {
+        Bool,
+        Double,
+        Int,
+        Long,
+        String
+    };
+
     public class PropInfo
     {
-        public char Type { get; set; }
+        public PropInfoType Type { get; set; }
         public string Name { get; set; }
-        public PropInfo(char type, string name)
+        public PropInfo(PropInfoType type, string name)
         {
             Type = type;
             Name = name;
@@ -148,19 +157,22 @@ namespace FFBitrateViewer
                             switch (k) 
                             {
                                 case "best_effort_timestamp_time":
-                                    info = new('d', "BestEffortTimestampTime");
+                                    info = new(PropInfoType.Double, "BestEffortTimestampTime");
                                     break;
                                 case "pict_type":
-                                    info = new('s', "PictType");
+                                    info = new(PropInfoType.String, "PictType");
                                     break;
                                 case "pkt_duration_time":
-                                    info = new('d', "DurationTime");
+                                    info = new(PropInfoType.Double, "DurationTime");
+                                    break;
+                                case "pkt_pos":
+                                    info = new(PropInfoType.Long, "Pos");
                                     break;
                                 case "pkt_pts_time":
-                                    info = new('d', "PTSTime");
+                                    info = new(PropInfoType.Double, "PTSTime");
                                     break;
                                 case "pkt_size":
-                                    info = new('i', "Size");
+                                    info = new(PropInfoType.Int, "Size");
                                     break;
                             }
 
@@ -189,16 +201,19 @@ namespace FFBitrateViewer
                             switch (k)
                             {
                                 case "duration_time":
-                                    info = new('d', "DurationTime");
+                                    info = new(PropInfoType.Double, "DurationTime");
                                     break;
                                 case "flags":
-                                    info = new('s', "Flags");
+                                    info = new(PropInfoType.String, "Flags");
+                                    break;
+                                case "pos":
+                                    info = new(PropInfoType.Long, "Pos");
                                     break;
                                 case "pts_time":
-                                    info = new('d', "PTSTime");
+                                    info = new(PropInfoType.Double, "PTSTime");
                                     break;
                                 case "size":
-                                    info = new('i', "Size");
+                                    info = new(PropInfoType.Int, "Size");
                                     break;
                             }
 
@@ -220,28 +235,35 @@ namespace FFBitrateViewer
         {
             switch (info.Type)
             {
-                case 'b':
+                case PropInfoType.Bool:
                     if (bool.TryParse(value, out bool b))
                     {
                         o.SetProperty(info.Name, b);
                         return true;
                     }
                     break;
-                case 'd':
+                case PropInfoType.Double:
                     if (double.TryParse(value, DoubleStyle, CultureInfo.InvariantCulture, out double d))
                     {
                         o.SetProperty(info.Name, d);
                         return true;
                     }
                     break;
-                case 'i':
+                case PropInfoType.Int:
                     if (int.TryParse(value, out int i))
                     {
                         o.SetProperty(info.Name, i);
                         return true;
                     }
                     break;
-                case 's':
+                case PropInfoType.Long:
+                    if (long.TryParse(value, out long l))
+                    {
+                        o.SetProperty(info.Name, l);
+                        return true;
+                    }
+                    break;
+                case PropInfoType.String:
                     o.SetProperty(info.Name, value);
                     return true;
             }

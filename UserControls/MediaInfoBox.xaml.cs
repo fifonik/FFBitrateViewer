@@ -11,13 +11,13 @@ namespace FFBitrateViewer.UserControls
             get { return (MediaInfo)GetValue(InfoProperty); }
             set { SetValue(InfoProperty, value); }
         }
-        public int? FramesCount
+        public Frames Frames
         {
-            get { return (int?)GetValue(FramesCountProperty); }
-            set { SetValue(FramesCountProperty, value); }
+            get { return (Frames)GetValue(FramesProperty); }
+            set { SetValue(FramesProperty, value); }
         }
         public static readonly DependencyProperty InfoProperty        = DependencyProperty.Register("MediaInfo",   typeof(MediaInfo), typeof(MediaInfoBox));
-        public static readonly DependencyProperty FramesCountProperty = DependencyProperty.Register("FramesCount", typeof(int?),      typeof(MediaInfoBox));
+        public static readonly DependencyProperty FramesProperty      = DependencyProperty.Register("Frames",      typeof(Frames),    typeof(MediaInfoBox));
 
         public MediaInfoBox()
         {

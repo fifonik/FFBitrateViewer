@@ -4,11 +4,11 @@ namespace FFBitrateViewer
 {
     public class FFProbeFramesInfoConfig
     {
-        // -select_streams {{stream}} -show_entries frame=best_effort_timestamp_time,pict_type,pkt_dts_time,pkt_duration_time,pkt_pts_time,pkt_size
+        // -select_streams {{stream}} -show_entries frame=pkt_pos,best_effort_timestamp_time,pict_type,pkt_dts_time,pkt_duration_time,pkt_pts_time,pkt_size
         // While getting information about frames/packets using compact format instead of json as it is:
         // - Smaller;
         // - Easier to parse while reading stdout.
-        public string Template { get; set; } = "-hide_banner -threads {{threads}} -print_format compact -loglevel fatal -show_error -select_streams v:{{stream}} -show_entries packet=dts_time,duration_time,pts_time,size,flags {{src}}";
+        public string Template { get; set; } = "-hide_banner -threads {{threads}} -print_format compact -loglevel fatal -show_error -select_streams v:{{stream}} -show_entries packet=pos,dts_time,duration_time,pts_time,size,flags {{src}}";
 
         public int    Timeout  { get; set; } = 60_000; // milliseconds
     }
