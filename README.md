@@ -21,7 +21,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 
 ## Latest version
-- Latest Beta: [0.9.2 beta 1](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.9.2-beta.1)
+- Latest Beta: [0.9.3 beta 1](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.9.3-beta.1)
 
 
 ## Requirements
