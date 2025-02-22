@@ -2,7 +2,7 @@
   "profiles": {
     "FFBitrateViewer": {
       "commandName": "Project",
-      "commandLineArgs": "--log-level=debug -plot-view-type=SECOND c:\\Vegas\\MainconceptBug2\\2012-11-22_095841.m2ts"
+      "commandLineArgs": "--log-level=debug"
     }
   }
 }

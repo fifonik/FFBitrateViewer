@@ -24,6 +24,7 @@ namespace FFBitrateViewer
         private static readonly Regex        RemoveUnusedRegex2    = new Regex(@"(?:^| )-[a-zA-Z_:-]+ ('?)\{\{[^\}]+\}\}\1(?=$| )", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
         //private static readonly Regex        CommaSplitRegex       = new Regex(@"((?:[^,\(]+(?:\([^\)]*\))?)+)(?:,|$)", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
         private static readonly char[]       DirSeparators         = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        private static readonly Regex        RemoveZeroes          = new(@"\.?0+$");
         public static readonly  int          Threads               = (Environment.ProcessorCount > 2) ? Environment.ProcessorCount - 1 : 0;
 
 
@@ -261,6 +262,11 @@ namespace FFBitrateViewer
         {
             if (string.IsNullOrEmpty(fs)) return;
             Process.Start(new ProcessStartInfo(fs) { UseShellExecute = true });
+        }
+
+        public static string RemoveTrailingZeroes(string s)
+        {
+            return RemoveZeroes.Replace(s, "");
         }
 
     }

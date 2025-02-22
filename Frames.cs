@@ -186,19 +186,19 @@ namespace FFBitrateViewer
         public double?      Duration                     { get { return Count > 0 ? (_frames[^1].EndTime - (IsAdjustStartTime ? StartTime : 0)) : null; } }
         public int          Count                        { get { return _frames.Count; } }
         public double       StartTime                    { get; set; } = 0;
-        public double?      FramesDuration               { get { return Count > 0 ? double.Abs(_frames[^1].EndTime - _frames[0].StartTime) : null; } }
+        public double?      FramesDuration               { get { return Count > 0 ? (_frames[^1].EndTime - _frames[0].StartTime) : null; } }
         public double?      FramesEndTime                { get { return Count > 0 ? _frames[^1].EndTime : null; } }
         public double?      FramesStartTime              { get { return Count > 0 ? _frames[0].StartTime : null; } }
 
 
-        public int Add(Frame frame, bool? isForceOrder = null)
+        public int? Add(Frame frame, bool? isForceOrder = null)
         {
             var isOrder = isForceOrder == true || !frame.IsOrdered;
             if (frame.Size > _maxSizeFrame) _maxSizeFrame = frame.Size;
             if (isOrder)
             {
                 var pos = PosFind(frame);
-                _frames.Insert(pos, frame);
+                if(pos != null) _frames.Insert((int)pos, frame);
                 return pos;
             }
             else
@@ -212,7 +212,7 @@ namespace FFBitrateViewer
         {
             if (_isCalcStartTime)
             {
-                CalcFramesStartTime(0);
+                CalcFramesStartTime(StartTime);
             }
         }
 
@@ -424,7 +424,7 @@ namespace FFBitrateViewer
         }
 
 
-        private int PosFind(Frame frame)
+        private int? PosFind(Frame frame)
         {
             // Searching position from the end as usually the frame that we are adding will be somewhere close to the end (but not always the last)
             // todo@ should probably stop loop if found key frame
@@ -434,6 +434,7 @@ namespace FFBitrateViewer
                 _isCalcStartTime = true;
                 for (int idx = _frames.Count - 1; idx >= 0; --idx)
                 {
+                    if (frame.Pos == _frames[idx].Pos) return null;
                     if (frame.Pos > _frames[idx].Pos) return idx + 1;
                 }
             }
@@ -441,6 +442,7 @@ namespace FFBitrateViewer
             {
                 for (int idx = _frames.Count - 1; idx >= 0; --idx)
                 {
+                    if (frame.StartTime == _frames[idx].StartTime) return null;
                     if (frame.StartTime > _frames[idx].StartTime) return idx + 1;
                 }
             }

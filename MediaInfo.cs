@@ -438,7 +438,6 @@ namespace FFBitrateViewer
     public class NDPair
     {
         private static readonly Regex NDPairRegex  = new(@"^(\d+)/(\d+)$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
-        private static readonly Regex RemoveZeroes = new(@"\.?0+$");
         public int?                   Denominator { get; set; }
         public int?                   Numerator   { get; set; }
         public string?                Value       { get; set; }
@@ -463,7 +462,7 @@ namespace FFBitrateViewer
         public override string? ToString() {
             var d = ToDouble();
             if (d == null) return null;
-            return RemoveZeroes.Replace(((double)d).ToString("0.000", CultureInfo.InvariantCulture), "");
+            return Helpers.RemoveTrailingZeroes(((double)d).ToString("0.000", CultureInfo.InvariantCulture));
         }
 
 
@@ -480,8 +479,8 @@ namespace FFBitrateViewer
         public string?             CodecTagString       { get; set; }
         public double?             Duration             { get; set; }
         public long?               DurationTS           { get; set; }
-        public NDPair?             FrameRateAvg         { get; set; }
-        public NDPair?             FrameRateR           { get; set; } // todo@ what is this?
+        public NDPair?             FrameRateAvg         { get; set; } // FPS
+        public NDPair?             FrameRateR           { get; set; } // TBR
         public string?             Id                   { get; set; }
         public int?                Index                { get; set; }
         public long?               StartPTS             { get; set; }
@@ -512,10 +511,8 @@ namespace FFBitrateViewer
         public bool                IsBitrateCalculated  { get; set; }
         public string?             Encoder              { get; set; }
         public VideoStreamFormat   Format               { get; set; }
-        //public UDouble?            FPS                  { get; set; }
         public string?             Profile              { get; set; }
         public PInt?               Resolution           { get; set; }
-        //public UDouble?            TBR                  { get; set; }
 
         public VideoStream(FFProbeStream info) : base(info)
         {
@@ -523,7 +520,6 @@ namespace FFBitrateViewer
             Profile    = info.Profile;
             if (info.BitRate != null)                      BitRate    = new BitRate((int)info.BitRate);
             if (info.Width != null && info.Height != null) Resolution = new PInt((int)info.Width, (int)info.Height);
-            //todo@ TBR
         }
 
 
@@ -533,10 +529,12 @@ namespace FFBitrateViewer
             var sb = new StringBuilder(15);
             switch (mode)
             {
-                case null: // FULL
+                case null: {
+                    // FULL
                     if (Resolution != null) sb.Append(Resolution.ToString('x'));
 
-                    if (FrameRateAvg?.Value != null) sb.Append("-" + FrameRateAvg.ToString());
+                    var framerate = GetFrameRate();
+                    if (framerate?.Value != null) sb.Append("-" + framerate.ToString());
                     sb.Append(Format?.ToString(VideoStreamFormatToStringMode.FIELD_TYPE));
                     result.Add(sb.ToString());
 
@@ -548,10 +546,12 @@ namespace FFBitrateViewer
 
                     if (BitRate != null) result.Add(BitRate.ToString());
                     break;
+                }
 
-                case VideoStreamToStringMode.SHORT:
+                case VideoStreamToStringMode.SHORT: {
                     if (Resolution != null) sb.Append(Resolution.Y);
-                    if (FrameRateAvg?.Value != null) sb.Append("-" + FrameRateAvg.ToString());
+                    var framerate = GetFrameRate();
+                    if (framerate?.Value != null) sb.Append("-" + framerate.ToString());
                     sb.Append(Format?.ToString(VideoStreamFormatToStringMode.FIELD_TYPE));
                     if (sb.Length > 0) result.Add(sb.ToString());
 
@@ -564,12 +564,20 @@ namespace FFBitrateViewer
                         if (!string.IsNullOrEmpty(s)) result.Add(s);
                     }
                     break;
+                }
 
-                default:
+                default: {
                     break; // todo@ exception?
+                }
             }
             return string.Join(", ", result);
         }
+
+        public NDPair? GetFrameRate()
+        {
+            return FrameRateR ?? FrameRateAvg;
+        }
+
     }
 
 

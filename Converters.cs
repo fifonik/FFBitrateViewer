@@ -93,7 +93,7 @@ namespace FFBitrateViewer
         {
             if (value is Frames frames && frames.Count > 0 && frames.FramesDuration > 0)
             {
-                return Math.Round((frames.Count / (double)frames.FramesDuration), 6).ToString() + " fps";
+                return Helpers.RemoveTrailingZeroes((frames.Count / (double)frames.FramesDuration).ToString("0.000", CultureInfo.InvariantCulture)) + " fps";
             }
             return ConverterHelper.NA;
         }
@@ -147,8 +147,7 @@ namespace FFBitrateViewer
         {
             if (value is Frames frames && frames.FramesStartTime != null)
             {
-                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesStartTime, 2)).ToString(@"hh\:mm\:ss\.ff");
-                if (result != "00:00:00.00") return result;
+                return TimeSpan.FromSeconds(Math.Round((double)frames.FramesStartTime, 2)).ToString(@"hh\:mm\:ss\.ff");
             }
             return ConverterHelper.NA;
         }
@@ -261,7 +260,8 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string? s = value is MediaInfo info && info.Video0?.FrameRateAvg != null ? (info.Video0?.FrameRateAvg?.ToString() + " fps (" + info.Video0?.FrameRateAvg?.Value + ")") : null;
+            var framerate = value is MediaInfo info ? info.Video0?.GetFrameRate() : null;
+            var s = framerate != null ? (framerate.ToString() + " fps (" + framerate.Value + ")") : null;
             return string.IsNullOrEmpty(s) ? ConverterHelper.NA : s;
         }
 

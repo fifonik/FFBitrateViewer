@@ -22,9 +22,9 @@ namespace FFBitrateViewer
             }
         }
         public string?                             FN                      { get { return Get<string?>(); }        private set { Set(value); } } // File Name
-        public  Frames?                            Frames                  { get { return Get<Frames?>(); }        private set { Set(value); } }
+        public  Frames?                            Frames                  { get { return Get<Frames?>(); }        private set { Set(value); OnPropertyChanged(nameof(Duration)); } }
         //public int?                                DropTarget              { get { return Get<int?>();  }          set { Set(value); } } // 1 -- top, 2 - bottom
-        public double?                             Duration                { get { return MediaInfo?.Video0?.Duration ?? MediaInfo?.Duration; } }
+        public double?                             Duration                { get { return MediaInfo?.Video0?.Duration ?? MediaInfo?.Duration ?? Frames?.Duration ?? Frames?.FramesDuration; } }
         public bool                                IsAdjustStartTime       { get { return Get<bool>();    }        set { Set(value); FramesIsAdjustStartTimeSet(value); } }
         public bool                                IsExists                { get { return Get<bool>();    }        private set { Set(value); OnPropertyChanged(nameof(IsReady));  } }
         public bool                                IsEnabled               { get { return Get<bool>();    }        set { Set(value);         OnPropertyChanged(nameof(IsReady));  } }
@@ -87,7 +87,7 @@ namespace FFBitrateViewer
                 if (o is Frame frame)
                 {
                     var pos = frames.Add(frame);
-                    action?.Invoke(pos, frame, line);
+                    if(pos != null) action?.Invoke(pos, frame, line);
                 }
             });
 

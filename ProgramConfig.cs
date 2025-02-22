@@ -20,7 +20,7 @@ namespace FFBitrateViewer
         // "-count_frames -count_packets" -- calculate frames & packets counts per stream and (returned in nb_frames/nb_packets), but this is much slower.
         // "-find_stream_info" -- fill-in missing information by actually read the streams instead of just parsing the header(s). It helps with corrupted files.
         // "-probesize 10000000" and "-analyzeduration 2000000" cab be used with -find_stream_info
-        public string Template { get; set; } = "-hide_banner -threads {{threads}} -print_format json=compact=1 -loglevel fatal -show_error -show_format -show_streams -show_entries stream_tags=duration {{src}}";
+        public string Template { get; set; } = "-hide_banner -threads {{threads}} -probesize 20M -print_format json=compact=1 -loglevel fatal -show_error -show_format -show_streams -show_entries stream_tags=duration {{src}}";
 
         public int    Timeout  { get; set; } = 30_000; // milliseconds
     }

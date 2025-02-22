@@ -5,7 +5,7 @@ It is inspired by [Bitrate Viewer](https://web.archive.org/web/20160730053853/ht
 FFBitrateViewer allows you to select multiple files without dealing with command line and get “per frame”, “per second” or “per GOP” info for all of them in one go.
 
 Well, and play with interactive graphs (powered by OxyPlot):
-<p align="center"><img src="screenshots/screenshot.0.9.0.png" width="900"/></p>
+<p align="center"><img src="screenshots/screenshot.0.9.4.png" width="900"/></p>
 
 
 ## Features
@@ -21,7 +21,7 @@ Well, and play with interactive graphs (powered by OxyPlot):
 
 
 ## Latest version
-- Latest Beta: [0.9.3 beta 1](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.9.3-beta.1)
+- Latest Beta: [0.9.4 beta 1](https://github.com/fifonik/FFBitrateViewer/releases/tag/v0.9.4-beta.1)
 
 
 ## Requirements
