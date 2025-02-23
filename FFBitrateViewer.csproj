@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <StartupObject>FFBitrateViewer.App</StartupObject>
-    <Version>0.9.5.1</Version>
+    <Version>0.9.6.1</Version>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Description>FFBitrateViewer -- FFProbe GUI</Description>
     <Copyright>Copyright © 2025 / Fifonik</Copyright>
