@@ -1,5 +1,5 @@
-﻿using System.Windows;
-using System;
+﻿using System;
+using System.Windows;
 
 namespace FFBitrateViewer
 {
@@ -24,7 +24,7 @@ namespace FFBitrateViewer
 
         public static bool LogLevelIs(LogLevel logLevel)
         {
-            return Logger?.GetMinLevel() == logLevel;
+            return Logger?.MinLevel == logLevel;
         }
 
 
@@ -36,7 +36,7 @@ namespace FFBitrateViewer
             }
             catch (Exception)
             {
-                MessageBox.Show("FFBitrateViewer unable to write into file:\n" + Logger?.GetFileName() + "\n\nLogging is disabled.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("FFBitrateViewer unable to write into file:\n" + Logger?.FileName + "\n\nLogging is disabled.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Logger?.Disable();
             }
         }

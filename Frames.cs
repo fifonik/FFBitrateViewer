@@ -1,10 +1,6 @@
 ﻿using OxyPlot;
 using System;
 using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
-using System.Runtime.Intrinsics.X86;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace FFBitrateViewer
 {
@@ -95,9 +91,12 @@ namespace FFBitrateViewer
         }
 
 
-        public DataPoint DataPointGet(double startTimeOffset, int sizeDivider = 1000 /* kilo */)
+        public List<DataPoint> DataPointGet(double startTimeOffset, bool isLast = false, int sizeDivider = 1000 /* kilo */)
         {
-            return new DataPoint(StartTime - startTimeOffset, Size / sizeDivider);
+            List<DataPoint> data = [];
+            data.Add(new DataPoint(StartTime - startTimeOffset, Size / sizeDivider));
+            if(isLast) data.Add(new DataPoint(EndTime - startTimeOffset, Size / sizeDivider));
+            return data;
         }
     }
 
@@ -164,7 +163,7 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> DataPointsGet(int sizeDivider = 1000 /* kilo */)
+        public List<DataPoint> DataPointsGet(bool isLast = false, int sizeDivider = 1000 /* kilo */)
         {
             List<DataPoint> data = [];
             if (IsEmpty) return data;
@@ -172,7 +171,7 @@ namespace FFBitrateViewer
             var bitRate = (int)double.Round(8 /* Byte => bit */ * BitRate / sizeDivider);
 
             data.Add(new DataPoint(StartTime, bitRate));
-            data.Add(new DataPoint(EndTime, bitRate));
+            if(isLast) data.Add(new DataPoint(EndTime, bitRate));
 
             return data;
         }
@@ -194,12 +193,19 @@ namespace FFBitrateViewer
 
         protected void CalcMinMax()
         {
-            int? max    = null;
-            int? min    = null;
-            ulong total = 0;
+            int? max     = null;
+            int? min     = null;
+            ulong? total = null;
             foreach (var gop in GOPs)
             {
-                total += (ulong)gop.Size;
+                if (total == null)
+                {
+                    total = (ulong)gop.Size;
+                }
+                else
+                {
+                    total += (ulong)gop.Size;
+                }
                 if (max == null || gop.BitRate > max) max = gop.BitRate;
                 if (min == null || gop.BitRate < min) min = gop.BitRate;
             }
@@ -222,7 +228,7 @@ namespace FFBitrateViewer
         public List<DataPoint> DataPointsGet(int sizeDivider = 1000 /* kilo */)
         {
             List<DataPoint> data = [];
-            foreach (var gop in GOPs) data.AddRange(gop.DataPointsGet(sizeDivider));
+            for (var idx = 0; idx < GOPs.Count; ++idx) data.AddRange(GOPs[idx].DataPointsGet(idx == GOPs.Count - 1, sizeDivider));
             return data;
         }
 
@@ -372,7 +378,7 @@ namespace FFBitrateViewer
             switch (plotViewType?.ToUpper() ?? "")
             {
                 case "FRAME":
-                    foreach (var frame in FramesList) data.Add(frame.DataPointGet(startTimeOffset, sizeDivider));
+                    for (var idx = 0; idx < FramesList.Count; ++idx) data.AddRange(FramesList[idx].DataPointGet(startTimeOffset, idx == FramesList.Count - 1, sizeDivider));
                     break;
                 case "GOP":
                     FramesByGOP.Calc(startTimeOffset);
@@ -472,17 +478,20 @@ namespace FFBitrateViewer
             return 0;
         }
 
+
         private void FillFramesStartTime(double startTime = 0)
         {
-            for (int idx = 0; idx < FramesList.Count; ++idx)
+            foreach(var frame in FramesList)
             {
-                if(FramesList[idx].StartTimeRaw != null)
+                if (frame.StartTimeRaw == null)
                 {
-                    startTime = (double)FramesList[idx].EndTime;
-                    continue;
+                    frame.StartTimeRaw = startTime;
+                    startTime += frame.Duration;
                 }
-                FramesList[idx].StartTimeRaw = startTime;
-                startTime += FramesList[idx].Duration;
+                else
+                {
+                    startTime = frame.EndTime;
+                }
             }
         }
     }

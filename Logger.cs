@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -19,33 +18,22 @@ namespace FFBitrateViewer
     {
         private string              FS;
         private StreamWriter?       Stream;
-        private readonly bool       Timestamp;
+        private readonly bool       AddTimestamp;
         private readonly bool       Append;
         private readonly bool       AutoFlush;
-        private bool                IsOpened = false;
-        private bool                IsDisabled = false;
-        private readonly LogLevel   MinLevel;
+        private bool                IsOpened    = false;
+        private bool                IsDisabled  = false;
+        public  LogLevel            MinLevel    { get; private set; }
+        public  string              FileName    { get { return Path.GetFileName(FS); } }
 
 
         public Logger(LogLevel minLogLevel, string fs, bool append = false, bool timestamp = false, bool autoflush = false)
         {
-            MinLevel    = minLogLevel;
-            FS          = fs;
-            Append      = append;
-            Timestamp   = timestamp;
-            AutoFlush   = autoflush;
-        }
-
-
-        public LogLevel GetMinLevel()
-        {
-            return MinLevel;
-        }
-
-
-        public bool IsEmpty()
-        {
-            return !File.Exists(FS);
+            MinLevel     = minLogLevel;
+            FS           = fs;
+            Append       = append;
+            AddTimestamp = timestamp;
+            AutoFlush    = autoflush;
         }
 
 
@@ -58,10 +46,10 @@ namespace FFBitrateViewer
        public bool Open(string? fs = null)
         {
             if (IsDisabled) return false;
-            if (!string.IsNullOrEmpty(fs))
+            if (!string.IsNullOrEmpty(fs) && !string.Equals(fs, FS, StringComparison.InvariantCultureIgnoreCase))
             {
                 FS = fs;
-                if (IsOpened) Close(); // todo@ why?
+                if (IsOpened) Close();
             }
             if (!IsOpened && !string.IsNullOrEmpty(FS))
             {
@@ -74,50 +62,45 @@ namespace FFBitrateViewer
 
         public void Log(LogLevel level, string line)
         {
-            if (IsDisabled) return;
-#if DEBUG
-            if (level == LogLevel.DEBUG) Debug.WriteLine("DEBUG: " + line);
-#endif
+            if (IsDisabled || string.IsNullOrEmpty(line)) return;
             if (level < MinLevel) return;
 
-            string l = "";
-            string d = "";
+            string logPrefix   = "";
+            string debugPrefix = "";
 
             switch (level)
             {
                 case LogLevel.DEBUG:
-                    l = "DEBUG: ";
-                    d = l;
+                    logPrefix = "DEBUG: ";
+                    debugPrefix = logPrefix;
                     break;
                 case LogLevel.INFO:
-                    //l = "INFO: ";
-                    d = "INFO: ";
+                    debugPrefix = "INFO: ";
                     break;
                 case LogLevel.WARNING:
-                    l = "WARNING: ";
-                    d = l;
+                    logPrefix = "WARNING: ";
+                    debugPrefix = logPrefix;
                     break;
                 case LogLevel.ERROR:
-                    l = "ERROR: ";
-                    d = l;
+                    logPrefix = "ERROR: ";
+                    debugPrefix = logPrefix;
                     break;
             }
-            Debug.WriteLine(d + line);
-            Log(l + line);
+            Debug.WriteLine(debugPrefix + line);
+            Log(logPrefix + line);
         }
 
 
-        public void Log(List<string> line, char separator = '\t', bool? timestamp = null)
-        {
-            Log(string.Join(separator.ToString(), line), timestamp);
-        }
+        //public void Log(List<string> line, char separator = '\t', bool? addTimestamp = null)
+        //{
+        //    Log(string.Join(separator.ToString(), line), addTimestamp);
+        //}
 
 
-        public void Log(string line, bool? timestamp = null)
+        public void Log(string line, bool? addTimestamp = null)
         {
             if (!Open()) return;
-            if (timestamp == null) timestamp = Timestamp;
-            if (timestamp == true)
+            if ((addTimestamp ?? AddTimestamp) == true)
             {
                 DateTime now = DateTime.Now;
                 Stream?.WriteLine($"{now:yyyy-MM-dd HH:mm:ss}\t" + line);
@@ -130,57 +113,51 @@ namespace FFBitrateViewer
         }
 
 
-        public void LogCSV(DataDictionary pairs, int frame, string? exclude = null, char separator = '\t')
-        {
-            if (!Open()) return;
+        //public void LogCSV(DataDictionary pairs, int frame, string? exclude = null, char separator = '\t')
+        //{
+        //    if (!Open()) return;
 
-            if (frame == 0)
-            {
-                string header = "frame";
-                foreach (string s in pairs.Keys)
-                {
-                    if (string.IsNullOrEmpty(exclude) || !exclude.Equals(s))
-                    {
-                        if (header != "") header += separator;
-                        header += s;
-                    }
-                }
-                Log(header);
-            }
+        //    if (frame == 0)
+        //    {
+        //        string header = "frame";
+        //        foreach (string s in pairs.Keys)
+        //        {
+        //            if (string.IsNullOrEmpty(exclude) || !exclude.Equals(s))
+        //            {
+        //                if (header != "") header += separator;
+        //                header += s;
+        //            }
+        //        }
+        //        Log(header);
+        //    }
 
-            string line = "" + frame;
-            foreach (object? o in pairs.Values)
-            {
-                string? s = o?.ToString();
-                if (string.IsNullOrEmpty(exclude) || !exclude.Equals(s))
-                {
-                    if (line != "") line += separator;
-                    line += s;
-                }
-            }
-            Log(line);
-        }
+        //    string line = "" + frame;
+        //    foreach (object? o in pairs.Values)
+        //    {
+        //        string? s = o?.ToString();
+        //        if (string.IsNullOrEmpty(exclude) || !exclude.Equals(s))
+        //        {
+        //            if (line != "") line += separator;
+        //            line += s;
+        //        }
+        //    }
+        //    Log(line);
+        //}
 
 
-        public void LogCSV(List<DataDictionary> data, string? frameNoKey = null, char separator = '\t')
-        {
-            for(int frame = 0; frame < data.Count; ++frame) LogCSV(data[frame], frame, frameNoKey, separator);
-        }
+        //public void LogCSV(List<DataDictionary> data, string? frameNoKey = null, char separator = '\t')
+        //{
+        //    for(int frame = 0; frame < data.Count; ++frame) LogCSV(data[frame], frame, frameNoKey, separator);
+        //}
 
 
         public void Close()
         {
             if (!IsOpened || Stream == null) return;
+            IsOpened = false;
             Stream.Flush();
             Stream.Close();
             Stream.Dispose();
-            IsOpened = false;
-        }
-
-
-        public string GetFileName()
-        {
-            return Path.GetFileName(FS);
         }
     }
 }
