@@ -1,5 +1,4 @@
-﻿using HarfBuzzSharp;
-using OxyPlot;
+﻿using OxyPlot;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -302,10 +301,17 @@ namespace FFBitrateViewer
                     }
                 }, cancellationToken);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Log.Write(LogLevel.ERROR, "Error processing files: " + ex.Message);
-                Debug.WriteLine("exception", ex.ToString());
+                if (cancellationTokenSource.IsCancellationRequested)
+                {
+                    Log.Write(LogLevel.DEBUG, "Files processing cancelled");
+                }
+                else
+                {
+                    Log.Write(LogLevel.ERROR, "Error processing files: " + ex.Message);
+                    Debug.WriteLine("exception", ex.ToString());
+                }
             }
             finally
             {

@@ -10,7 +10,7 @@ namespace FFBitrateViewer
         // - Easier to parse while reading stdout.
         public string Template { get; set; } = "-hide_banner -threads {{threads}} -print_format compact -loglevel fatal -show_error -select_streams v:{{stream}} -show_entries packet=pos,dts_time,duration_time,pts_time,size,flags {{src}}";
 
-        public int    Timeout  { get; set; } = 60_000; // milliseconds
+        public int    Timeout  { get; set; } = 1800_000; // milliseconds
     }
 
 

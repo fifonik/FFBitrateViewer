@@ -180,13 +180,23 @@ namespace FFBitrateViewer
 
         public long GetValue()
         {
-            return IsConvertToK() ? (long)Math.Round((double)Value / 1000) : Value;
+            return IsConvertToK() ? GetConvertedValue() : Value;
         }
 
 
         public string GetUnit()
         {
-            return (IsConvertToK() ? "k" : "") + (Unit ?? unitDefault);
+            return (IsConvertToK() ? GetConversionPrefix() : "") + (Unit ?? unitDefault);
+        }
+
+        private string GetConversionPrefix()
+        {
+            return (Value > 100000000) ? "M" : "k";
+        }
+
+        private long GetConvertedValue()
+        {
+            return (long)Math.Round((double)Value / (Value > 100000000 ? 1000000 : 1000));
         }
 
 
@@ -518,7 +528,7 @@ namespace FFBitrateViewer
         {
             Format     = new VideoStreamFormat(info);
             Profile    = info.Profile;
-            if (info.BitRate != null)                      BitRate    = new BitRate((int)info.BitRate);
+            if (info.BitRate != null)                      BitRate    = new BitRate((long)info.BitRate);
             if (info.Width != null && info.Height != null) Resolution = new PInt((int)info.Width, (int)info.Height);
         }
 

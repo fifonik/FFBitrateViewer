@@ -82,7 +82,7 @@ namespace FFBitrateViewer
             if (MediaInfo != null) frames.StartTime = MediaInfo.StartTime;
 
             int line = 0;
-            FF.FramesGet(FS, cancellationToken, o => {
+            ExecStatus status = FF.FramesGet(FS, cancellationToken, o => {
                 ++line;
                 if (o is Frame frame)
                 {
@@ -91,7 +91,7 @@ namespace FFBitrateViewer
                 }
             });
 
-            if (!cancellationToken.IsCancellationRequested)
+            if (status.Code == 0)
             {
                 frames.Analyze();
                 BitRatesCalc(frames);

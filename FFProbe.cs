@@ -185,7 +185,7 @@ namespace FFBitrateViewer
     public class FFProbeStream
     {
         [JsonProperty("bit_rate")]
-        public int? BitRate { get; set; }
+        public long? BitRate { get; set; }
 
         [JsonProperty("bits_per_sample")]
         public int? BitsPerSample { get; set; }

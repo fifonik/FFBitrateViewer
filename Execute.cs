@@ -1,6 +1,4 @@
-﻿#define EXECUTE_WITH_CANCELLATION_TOKEN
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -15,11 +13,19 @@ namespace FFBitrateViewer
         public string StdOut = "";
     }
 
+    public enum ExecStop
+    {
+        None    = 0,
+        Timeout = 1,
+        Cancel  = 2
+    }
+
 
     class Execute
     {
-        private readonly static int TimeoutDefault = 5000; // milliseconds
-        private readonly static int TimeoutStep    = 200;  // milliseconds
+        private readonly static int TimeoutDefault  = 5000;   // milliseconds
+        private readonly static int TimeoutNoOutput = 15_000; // milliseconds
+        private readonly static int TimeoutStep     = 200;    // milliseconds
 
 
         public static ExecStatus Exec(string executable, string args, int? timeout = null, CancellationToken? cancellationToken = null, Action<string>? stdoutAction = null, Action<string>? stderrAction = null)
@@ -29,10 +35,13 @@ namespace FFBitrateViewer
             Log.WriteCommand(executable, args);
 
             Log.Write(LogLevel.DEBUG, func + ": Started", executable, args);
-            var result = new ExecStatus();
-            var stdout = new StringBuilder();
-            var stderr = new StringBuilder();
-            timeout    ??= TimeoutDefault;
+            var result    = new ExecStatus();
+            var stdout    = new StringBuilder();
+            var stderr    = new StringBuilder();
+            int time1     = 0;
+            int time2     = 0;
+            int timeout1  = timeout ?? TimeoutDefault;
+            int timeout2  = TimeoutNoOutput;
 
             using (var stdoutWaitHandle = new AutoResetEvent(false))
             using (var stderrWaitHandle = new AutoResetEvent(false))
@@ -56,6 +65,7 @@ namespace FFBitrateViewer
                     {
                         process.OutputDataReceived += (sender, e) =>
                         {
+                            time2 = 0;
                             if (string.IsNullOrEmpty(e.Data)) stdoutWaitHandle.Set();
                             else
                             {
@@ -69,6 +79,7 @@ namespace FFBitrateViewer
 
                         process.ErrorDataReceived += (sender, e) =>
                         {
+                            time2 = 0;
                             if (string.IsNullOrEmpty(e.Data)) stderrWaitHandle.Set();
                             else
                             {
@@ -86,40 +97,31 @@ namespace FFBitrateViewer
                         process.BeginOutputReadLine();
                         process.BeginErrorReadLine();
 
-#if EXECUTE_WITH_CANCELLATION_TOKEN
-                        bool cancelled = false;
-                        int time = 0;
+                        ExecStop stopped = ExecStop.None;
+
                         do
                         {
+                            time1 += TimeoutStep;
+                            time2 += TimeoutStep;
+                            if (time1 > timeout1 || time2 > timeout2)
+                            {
+                                Log.Write(LogLevel.DEBUG, func + ": Timed out");
+                                stopped = ExecStop.Timeout;
+                                result.Code = -2;
+                                result.StdErr = "Timed out";
+                                break;
+                            }
                             if (cancellationToken != null && ((CancellationToken)cancellationToken).IsCancellationRequested) // todo@ cancellationToken.ThrowIfCancellationRequested()
                             {
                                 Log.Write(LogLevel.DEBUG, func + ": Cancellation request received");
-                                cancelled = true;
-                                process.CancelOutputRead();
-                                process.CancelErrorRead();
-                                stdoutWaitHandle.Set();
-                                stderrWaitHandle.Set();
+                                stopped = ExecStop.Cancel;
+                                result.Code = -4;
+                                result.StdErr = "Cancelled";
                                 break;
                             }
-                            time += TimeoutStep;
-                            if (time > timeout) break;
                         } while (!process.WaitForExit(TimeoutStep));
 
-                        if (cancelled)
-                        {
-                            Log.Write(LogLevel.DEBUG, func + ": Cancellation request received, trying to close external program...");
-                            if (process.CloseMainWindow())
-                            {
-                                Log.Write(LogLevel.DEBUG, func + ": External program closed successfully");
-                            }
-                            else
-                            {
-                                Log.Write(LogLevel.DEBUG, func + ": External program closing failed. Killing it");
-                                process.Kill();
-                            }
-                            process.WaitForExit();
-                        }
-                        else
+                        if (stopped == ExecStop.None)
                         {
                             process.WaitForExit(); // double checking
                             process.Refresh();
@@ -131,32 +133,30 @@ namespace FFBitrateViewer
                             //if (result.Code != 0) throw new InvalidOperationException();
 
                             result.StdOut = stdout.ToString();
-                            result.StdErr = stderr.ToString();
                             Log.Write(LogLevel.DEBUG, func + ": StdOut=" + result.StdOut);
-                            Log.Write(LogLevel.DEBUG, func + ": StdErr=" + result.StdErr);
-                            if (result.Code != 0 && string.IsNullOrEmpty(result.StdErr)) result.StdErr = "Could not get any output";
-                        }
-#else
-                        if (process.WaitForExit((int)timeout))
-                        {
-                            process.WaitForExit(); // checking
-                            process.Refresh();     // checking
-                            result.Code = process.HasExited ? process.ExitCode : -3;
-
-                            result.StdOut = stdout.ToString();
                             result.StdErr = stderr.ToString();
-                            Log.Write(LogLevel.DEBUG, func + ": StdOut=" + result.StdOut);
                             Log.Write(LogLevel.DEBUG, func + ": StdErr=" + result.StdErr);
                             if (result.Code != 0 && string.IsNullOrEmpty(result.StdErr)) result.StdErr = "Could not get any output";
                         }
                         else
                         {
-                            // Timed out
-                            result.Code   = -2;
-                            result.StdErr = "Timed out";
+                            process.CancelOutputRead();
+                            process.CancelErrorRead();
+                            stdoutWaitHandle.Set();
+                            stderrWaitHandle.Set();
+                            Log.Write(LogLevel.DEBUG, func + ": Closing external program");
+                            if (process.CloseMainWindow())
+                            {
+                                Log.Write(LogLevel.DEBUG, func + ": External program closed successfully");
+                            }
+                            else
+                            {
+                                Log.Write(LogLevel.DEBUG, func + ": Unable to close external program. Killing it");
+                                process.Kill();
+                            }
+                            process.WaitForExit();
+                            process.Refresh();
                         }
-#endif
-                        Debug.WriteLine("Finished");
                     }
                     catch (Exception e)
                     {
@@ -168,13 +168,13 @@ namespace FFBitrateViewer
                     }
                     finally
                     {
-                        stdoutWaitHandle.WaitOne((int)timeout);
-                        stderrWaitHandle.WaitOne((int)timeout);
+                        stdoutWaitHandle.WaitOne(timeout1);
+                        stderrWaitHandle.WaitOne(timeout1);
                     }
                 }
             }
 
-            Log.Write(LogLevel.DEBUG, func + ": Finished. stdout=" + result.StdOut + ", stderr=" + result.StdErr + "(" + result.Code + ")");
+            Log.Write(LogLevel.DEBUG, func + ": Finished. stdout=" + result.StdOut + ", stderr=" + result.StdErr + " (" + result.Code + ")");
             return result;
         }
 
