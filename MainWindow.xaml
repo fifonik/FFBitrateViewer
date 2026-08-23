@@ -564,9 +564,9 @@
             </Grid>
         </Grid>
 
-        <StatusBar Grid.Row="2" Height="25" VerticalAlignment="Bottom" Margin="0" VerticalContentAlignment="Stretch" Padding="5,0,20,1" HorizontalContentAlignment="Stretch" UseLayoutRounding="True">
+        <StatusBar Grid.Row="2" Height="25" VerticalAlignment="Bottom" Margin="0" VerticalContentAlignment="Stretch" Padding="5,0,12,1" HorizontalContentAlignment="Stretch" UseLayoutRounding="True">
             <StatusBarItem DockPanel.Dock="Right" VerticalAlignment="Center">
-                <Grid Width="260" Height="21" VerticalAlignment="Center">
+                <Grid Width="600" Height="21" VerticalAlignment="Center">
                     <!-- ProgressBar with IsIndeterminate="True" causing high CPU/GPU utilisation even when hidden! -->
                     <ProgressBar Height="17" Minimum="0" Maximum="{Binding Path=OverallProgress.Max, Mode=OneWay}" Value="{Binding Path=OverallProgress.Current, Mode=OneWay}" Visibility="{Binding Path=OverallProgress.IsActive, Converter={StaticResource BoolToVisibility}}" IsIndeterminate="{Binding Path=OverallProgress.IsIndeterminateXAML}" VerticalAlignment="Center" />
                     <TextBlock FontSize="12" Margin="4,0,4,0" Text="{Binding Path=OverallProgress.Text, Mode=OneWay}" VerticalAlignment="Center" Foreground="Black"/>

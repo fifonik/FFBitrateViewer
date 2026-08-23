@@ -60,15 +60,10 @@ namespace FFBitrateViewer
         }
 
 
-        public void FileProgressSet(int fileIndex, Frame? frame = null)
+        public void FileProgressSet(FileItem file, double time)
         {
-            string s = "Processing file: " + (fileIndex + 1);
-            if (frame != null)
-            {
-                s += ", time: " + TimeSpan.FromSeconds(frame.StartTime).ToString(@"hh\:mm\:ss");
-                Current = (int)(ProcessedDuration + frame.StartTime);
-            }
-            Text = s;
+            Current = (int)(ProcessedDuration + time);
+            Text = "Processing: [" + TimeSpan.FromSeconds(time).ToString(@"hh\:mm\:ss") + "] " + file.FN;
         }
     }
 

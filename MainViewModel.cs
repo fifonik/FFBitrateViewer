@@ -71,7 +71,7 @@ namespace FFBitrateViewer
             VersionInfo             = new();
             OverallProgress         = new(true/* indeterminate */);
 
-            Files                   = new();
+            Files                   = [];
             Files.CollectionChanged += OnFilesCollectionChanged;
 
             PlotModel = new MyPlotModel("");
@@ -143,13 +143,14 @@ namespace FFBitrateViewer
         {
             if (!IsFileCanBeAdded(fs)) return false;
 
-            var file = new FileItem(fs, enabled);
-            file.IsAdjustStartTime = IsAdjustStartTimeOnPlot;
+            var file = new FileItem(fs, enabled)
+            {
+                IsAdjustStartTime = IsAdjustStartTimeOnPlot
+            };
 
             Files.Add(file);
 
-            int idx = Files.Count - 1;
-            PlotModel?.SerieSet(null, PlotModel.SerieCreate(file, idx));
+            PlotModel?.SerieAdd(file, Files.Count - 1);
             PlotRedraw();
 
             return true;
@@ -161,23 +162,7 @@ namespace FFBitrateViewer
             if (src < 0 || src >= Files.Count || dest < 0 || dest > Files.Count || src == dest || src == dest - 1) return false;
 
             Files.Move(src, src < dest ? dest - 1 : dest);
-
-            var temp = PlotModel?.SerieGet(src);
-
-            if (temp != null)
-            {
-                if (src < dest)
-                {
-                    for (var idx = src; idx < dest - 1; ++idx) PlotModel?.SerieSet(idx, PlotModel.SerieGet(idx + 1));
-                    PlotModel?.SerieSet(dest - 1, temp);
-                }
-                else
-                {
-                    for (var idx = src; idx > dest; --idx) PlotModel?.SerieSet(idx, PlotModel.SerieGet(idx - 1));
-                    PlotModel?.SerieSet(dest, temp);
-                }
-                PlotRedraw();
-            }
+            if(PlotModel?.SerieMove(src, dest) == true) PlotRedraw();
 
             return true;
         }
@@ -193,13 +178,15 @@ namespace FFBitrateViewer
         {
             if (fileIndex < 0 || fileIndex >= Files.Count) return false;
 
-            PlotModel?.Series.RemoveAt(fileIndex);
-            for (int serieIndex = fileIndex; serieIndex < PlotModel?.Series.Count; ++serieIndex) PlotModel?.SerieStyleApply(serieIndex);
-
             Files.RemoveAt(fileIndex);
 
-            PlotAxesUpdate();
-            PlotRedraw();
+            if (PlotModel?.SerieRemove(fileIndex) == true)
+            {
+                for (int idx = 0; idx < Files.Count; ++idx) PlotModel.SerieStyleApply(idx);
+                PlotAxesUpdate();
+                PlotRedraw();
+            }
+
             return true;
         }
 
@@ -280,22 +267,25 @@ namespace FFBitrateViewer
                     {
                         var file = Files[idx];
                         if (!file.IsReady || file.IsFramesLoaded) continue;
-                        OverallProgress?.FileProgressSet(idx);
+                        OverallProgress?.FileProgressSet(file, 0);
 
                         PlotModel?.SeriePointsClear(idx);
 
                         file.FramesGet(cancellationToken, (pos, frame, line) => {
-                            if (line % 1000 == 0) OverallProgress?.FileProgressSet(idx, frame);
+                            if (line % 1000 == 0) OverallProgress?.FileProgressSet(file, frame.StartTime);
                         });
                         if (OverallProgress != null && file.Duration != null) OverallProgress.ProcessedDuration += (double)file.Duration;
 
                         ++updated;
 
-                        PlotModel?.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
-                        PlotModel?.AxisMaximumSet(0, file.FramesMaxXGet(PlotViewType));
-                        PlotModel?.AxisMaximumSet(1, file.FramesMaxYGet(PlotViewType));
-                        PlotModel?.ResetAllAxes();
-                        PlotRedraw();
+                        if (PlotModel != null)
+                        {
+                            PlotModel.SeriePointsAdd(idx, file.FramesDataPointsGet(PlotViewType));
+                            PlotModel.AxisMaximumSet(0, file.FramesMaxXGet(PlotViewType));
+                            PlotModel.AxisMaximumSet(1, file.FramesMaxYGet(PlotViewType));
+                            PlotModel.ResetAllAxes();
+                            PlotRedraw();
+                        }
 
                         cancellationToken.ThrowIfCancellationRequested();
                     }
