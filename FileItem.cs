@@ -70,12 +70,6 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> FramesRunningAverageDataPPointsGet(string? plotViewType)
-        {
-            return Frames == null ? new List<DataPoint>() : Frames.RunningAverageDataPointsGet(plotViewType);
-        }
-
-
         public void FramesGet(CancellationToken cancellationToken, Action<int?, Frame, int>? action = null)
         {
             // Cannot just clear & reload Frames as it will not updated in MediaInfoBox

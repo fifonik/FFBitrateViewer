@@ -405,28 +405,6 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> RunningAverageDataPointsGet(string? plotViewType, int sizeDivider = 1000/* kilo */)
-        {
-            List<DataPoint> data = [];
-            var startTimeOffset = IsAdjustStartTime ? StartTime : 0;
-            switch (plotViewType?.ToUpper() ?? "")
-            {
-                case "FRAME":
-                    for (var frameIndex = 0; frameIndex < FramesList.Count; ++frameIndex) data.AddRange(FramesList[frameIndex].DataPointGet(startTimeOffset, frameIndex == FramesList.Count - 1, 10000));
-                    break;
-                case "GOP":
-                    FramesByGOP.Calc(startTimeOffset);
-                    data.AddRange(FramesByGOP.DataPointsGet(10000));
-                    break;
-                case "SECOND":
-                    FramesByTime.Calc(startTimeOffset);
-                    data.AddRange(FramesByTime.DataPointsGet(10000));
-                    break;
-            }
-            return data;
-        }
-
-
         public void IsAdjustStartTimeSet(bool isAdjustStartTime)
         {
             if (isAdjustStartTime != IsAdjustStartTime)
