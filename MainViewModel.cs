@@ -457,8 +457,8 @@ namespace FFBitrateViewer
             var maxX = file.FramesMaxXGet(PlotViewType);
             if (maxX == null) return;
 
-            var birtateAvg = file.BitRateAvg?.GetValue();
-            if (birtateAvg != null) PlotModel.LineAnnotationAdd((double)maxX, (int)birtateAvg, "Average", OxyColors.Gray);
+            var birtateAvg = file.BitRateAvg?.Value;
+            if (birtateAvg != null) PlotModel.LineAnnotationAdd((double)maxX, Frame.ScaleY(PlotViewType, (int)birtateAvg), "Average", OxyColors.Gray);
         }
 
 

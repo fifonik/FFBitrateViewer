@@ -367,18 +367,18 @@ namespace FFBitrateViewer
                 dragFileSrcIndex = listviewFiles.SelectedIndex;
                 //Dispatcher.BeginInvoke(new Action(() =>
                 //{
-                    try
-                    {
+                //    try
+                //    {
                         DragDrop.DoDragDrop(item, new DataObject("FileItem", file), DragDropEffects.Move);
-                    }
-                    catch (Exception)
-                    {
-                        Console.WriteLine("Error occurred");
-                    }
-                    finally
-                    {
-                    dragFileSrcIndex = null;
-                }
+                //    }
+                //    catch (Exception)
+                //    {
+                //        Console.WriteLine("Error occurred");
+                //    }
+                //    finally
+                //    {
+                //    dragFileSrcIndex = null;
+                //}
                 //}), DispatcherPriority.Background);
             }
             else

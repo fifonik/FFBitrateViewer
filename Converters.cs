@@ -27,7 +27,7 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (value is BitRate bitrate) ? bitrate.ToString() : ConverterHelper.NA;
+            return (value is BitRate bitrate) ? bitrate.ToString(8/* byte to bit */) : ConverterHelper.NA;
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -81,7 +81,7 @@ namespace FFBitrateViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var d = (double?)value;
-            return (d == null) ? ConverterHelper.NA  : TimeSpan.FromSeconds((double)d).ToString(@"hh\:mm\:ss");
+            return (d == null) ? ConverterHelper.NA  : TimeSpan.FromSeconds((double)d).ToString(@"hh\:mm\:ss\.ff");
         }
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) { throw new NotImplementedException(); }
     }
@@ -117,7 +117,7 @@ namespace FFBitrateViewer
         {
             if (value is Frames frames && frames.FramesDuration > 0)
             {
-                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesDuration, 2)).ToString(@"hh\:mm\:ss\.ff");
+                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesDuration, 2)).ToString(@"hh\:mm\:ss\.fff");
                 if (result != "00:00:00.00") return result;
             }
             return ConverterHelper.NA;
@@ -132,7 +132,7 @@ namespace FFBitrateViewer
         {
             if (value is Frames frames && frames.FramesEndTime != null)
             {
-                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesEndTime, 2)).ToString(@"hh\:mm\:ss\.ff");
+                string result = TimeSpan.FromSeconds(Math.Round((double)frames.FramesEndTime, 2)).ToString(@"hh\:mm\:ss\.fff");
                 if (result != "00:00:00.00") return result;
             }
             return ConverterHelper.NA;
@@ -147,7 +147,7 @@ namespace FFBitrateViewer
         {
             if (value is Frames frames && frames.FramesStartTime != null)
             {
-                return TimeSpan.FromSeconds(Math.Round((double)frames.FramesStartTime, 2)).ToString(@"hh\:mm\:ss\.ff");
+                return TimeSpan.FromSeconds(Math.Round((double)frames.FramesStartTime, 2)).ToString(@"hh\:mm\:ss\.fff");
             }
             return ConverterHelper.NA;
         }
@@ -232,7 +232,7 @@ namespace FFBitrateViewer
         {
             if (value is MediaInfo info && info.Duration != null)
             {
-                string result = TimeSpan.FromSeconds((double)info.Duration).ToString(@"hh\:mm\:ss\.ff");
+                string result = TimeSpan.FromSeconds((double)info.Duration).ToString(@"hh\:mm\:ss\.fff");
                 if (result != "00:00:00.00") return result;
             }
             return ConverterHelper.NA;
@@ -245,10 +245,9 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is MediaInfo info)
+            if (value is MediaInfo info && info.StartTimeRaw != null)
             {
-                string result = TimeSpan.FromSeconds((double)info.StartTime).ToString(@"hh\:mm\:ss\.ff");
-                if (result != "00:00:00.00") return result;
+                return TimeSpan.FromSeconds((double)info.StartTimeRaw).ToString(@"hh\:mm\:ss\.fff");
             }
             return ConverterHelper.NA;
         }
@@ -316,7 +315,7 @@ namespace FFBitrateViewer
                 if (d == null && info.Duration != null) d = info.Duration;
                 if (d != null)
                 {
-                    string result = TimeSpan.FromSeconds((double)d).ToString(@"hh\:mm\:ss\.ff");
+                    string result = TimeSpan.FromSeconds((double)d).ToString(@"hh\:mm\:ss\.fff");
                     if (result != "00:00:00.00") return result + (info.Video0?.Duration == null ? "*" : "");
                 }
             }
@@ -377,7 +376,7 @@ namespace FFBitrateViewer
         {
             if (value is MediaInfo info && info.Video0?.Duration != null)
             {
-                string result = TimeSpan.FromSeconds((double)info.Video0.Duration).ToString(@"hh\:mm\:ss\.ff");
+                string result = TimeSpan.FromSeconds((double)info.Video0.Duration).ToString(@"hh\:mm\:ss\.fff");
                 if (result != "00:00:00.00") return result;
             }
             return ConverterHelper.NA;
@@ -390,10 +389,9 @@ namespace FFBitrateViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is MediaInfo info)
+            if (value is MediaInfo info && info.StartTimeRaw != null)
             {
-                string result = TimeSpan.FromSeconds((double)info.StartTime).ToString(@"hh\:mm\:ss\.ff");
-                if (result != "00:00:00.00") return result;
+                return TimeSpan.FromSeconds((double)info.StartTimeRaw).ToString(@"hh\:mm\:ss\.fff");
             }
             return ConverterHelper.NA;
         }

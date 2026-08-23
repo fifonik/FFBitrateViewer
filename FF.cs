@@ -426,6 +426,7 @@ namespace FFBitrateViewer
             var duration = data.GetDuration();
             if (duration != null) info.Duration = duration;
 
+            info.StartTimeRaw = data.Format?.StartTime;
             if (data.Format?.StartTime != null) info.StartTime = (double)data.Format.StartTime;
 
             if (data.Format?.BitRate != null) info.BitRate = new BitRate((long)data.Format.BitRate);

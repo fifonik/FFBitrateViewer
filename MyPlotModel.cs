@@ -1,8 +1,9 @@
 ﻿using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Axes;
-using OxyPlot.Series;
 using OxyPlot.Legends;
+using OxyPlot.Series;
+using System;
 using System.Collections.Generic;
 
 namespace FFBitrateViewer
@@ -203,6 +204,7 @@ namespace FFBitrateViewer
             Name         = name;
             PlotViewType = "frame";
             PlotMargins  = new OxyThickness(45, 10, 8, 35);
+            DefaultFont = "Microsoft YaHei"; // To correctly render Chineese characters
 
             // Setting white background as with transparent (default) image cannot be copied to Clipboard bacause of WPF bug: https://github.com/oxyplot/oxyplot/issues/17
             Background = OxyColors.White;
@@ -217,8 +219,7 @@ namespace FFBitrateViewer
                 LegendBackground      = OxyColor.FromAColor(200, OxyColors.White),
                 LegendBorder          = OxyColors.Black,
                 LegendBorderThickness = 0,
-                ShowInvisibleSeries   = false,
-                //LegendFont            = "Arial" // todo@ Chineese characters not rendered correctly
+                ShowInvisibleSeries   = false
             });
 
             // 0 -- X (time)
@@ -273,7 +274,7 @@ namespace FFBitrateViewer
         }
 
 
-        public void LineAnnotationAdd(double maxX, int y, string text, OxyColor color)
+        public void LineAnnotationAdd(double maxX, double y, string text, OxyColor color)
         {
             var annotation = new LineAnnotation
             {
@@ -281,7 +282,7 @@ namespace FFBitrateViewer
                 TextVerticalAlignment = VerticalAlignment.Bottom,
                 TextLinePosition = 0.04,
                 Y = y,
-                MaximumX = maxX,
+                MaximumX = Axes[0].AbsoluteMaximum,
                 Color = color,
                 Text = text
             };

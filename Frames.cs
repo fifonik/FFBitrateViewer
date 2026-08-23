@@ -91,12 +91,25 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> DataPointGet(double startTimeOffset, bool isLast = false, int sizeDivider = 1000 /* kilo */)
+        public List<DataPoint> DataPointGet(string? plotViewType, double startTimeOffset, bool isLast = false)
         {
             List<DataPoint> data = [];
-            data.Add(new DataPoint(StartTime - startTimeOffset, Size / sizeDivider));
-            if(isLast) data.Add(new DataPoint(EndTime - startTimeOffset, (double)Size / sizeDivider));
+            var y = ScaleY(plotViewType, Size);
+            data.Add(new DataPoint(StartTime - startTimeOffset, y));
+            if(isLast) data.Add(new DataPoint(EndTime - startTimeOffset, y));
             return data;
+        }
+
+
+        public static double ScaleY(string? plotViewType, int value, int sizeDivider = 1000/* kilo */)
+        {
+            switch (plotViewType?.ToUpper())
+            {
+                case "GOP":
+                case "SECOND":
+                    return (double)value * 8 /* Byte/s => bit/s */ / sizeDivider;
+            }
+            return (double)value / sizeDivider;
         }
     }
 
@@ -174,12 +187,12 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> DataPointsGet(bool isLast = false, int sizeDivider = 1000 /* kilo */)
+        public List<DataPoint> DataPointsGet(string? plotViewType, bool isLast = false)
         {
             List<DataPoint> data = [];
             if (IsEmpty) return data;
 
-            var bitRate = (int)double.Round(8 /* Byte => bit */ * BitRate / sizeDivider);
+            var bitRate = Frame.ScaleY(plotViewType, BitRate);
 
             data.Add(new DataPoint(StartTime, bitRate));
             if(isLast) data.Add(new DataPoint(EndTime, bitRate));
@@ -236,10 +249,10 @@ namespace FFBitrateViewer
         }
 
 
-        public List<DataPoint> DataPointsGet(int sizeDivider = 1000 /* kilo */)
+        public List<DataPoint> DataPointsGet(string? plotViewType)
         {
             List<DataPoint> data = [];
-            for (var idx = 0; idx < GOPs.Count; ++idx) data.AddRange(GOPs[idx].DataPointsGet(idx == GOPs.Count - 1, sizeDivider));
+            for (var idx = 0; idx < GOPs.Count; ++idx) data.AddRange(GOPs[idx].DataPointsGet(plotViewType, idx == GOPs.Count - 1));
             return data;
         }
 
@@ -383,22 +396,22 @@ namespace FFBitrateViewer
 
 
         // todo@ caching?
-        public List<DataPoint> DataPointsGet(string? plotViewType, int sizeDivider = 1000/* kilo */)
+        public List<DataPoint> DataPointsGet(string? plotViewType)
         {
             List<DataPoint> data = [];
             var startTimeOffset  = IsAdjustStartTime ? StartTime : 0;
             switch (plotViewType?.ToUpper() ?? "")
             {
                 case "FRAME":
-                    for (var idx = 0; idx < FramesList.Count; ++idx) data.AddRange(FramesList[idx].DataPointGet(startTimeOffset, idx == FramesList.Count - 1, sizeDivider));
+                    for (var idx = 0; idx < FramesList.Count; ++idx) data.AddRange(FramesList[idx].DataPointGet(plotViewType, startTimeOffset, idx == FramesList.Count - 1));
                     break;
                 case "GOP":
                     FramesByGOP.Calc(startTimeOffset);
-                    data.AddRange(FramesByGOP.DataPointsGet(sizeDivider));
+                    data.AddRange(FramesByGOP.DataPointsGet(plotViewType));
                     break;
                 case "SECOND":
                     FramesByTime.Calc(startTimeOffset);
-                    data.AddRange(FramesByTime.DataPointsGet(sizeDivider));
+                    data.AddRange(FramesByTime.DataPointsGet(plotViewType));
                     break;
             }
             return data;
@@ -428,7 +441,7 @@ namespace FFBitrateViewer
         }
 
 
-        public int MaxYGet(string? plotViewType, int sizeDivider = 1000/* kilo */)
+        public int MaxYGet(string? plotViewType)
         {
             var value           = 0;
             var startTimeOffset = (IsAdjustStartTime ? StartTime : 0);
@@ -439,14 +452,14 @@ namespace FFBitrateViewer
                     break;
                 case "GOP":
                     FramesByGOP.Calc(startTimeOffset);
-                    value = (FramesByGOP.MaxSize ?? 0) * 8 /* Byte/s => bit/s */;
+                    value = FramesByGOP.MaxSize ?? 0;
                     break;
                 case "SECOND":
                     FramesByTime.Calc(startTimeOffset);
-                    value = (FramesByTime.MaxSize ?? 0) * 8 /* Byte/s => bit/s */;
+                    value = FramesByTime.MaxSize ?? 0;
                     break;
             }
-            return (int)double.Round(value / sizeDivider);
+            return (int)double.Round(Frame.ScaleY(plotViewType, value));
         }
 
 
@@ -459,9 +472,9 @@ namespace FFBitrateViewer
 
             return new FramesBitRates
             {
-                Avg = (FramesByTime.TotalSize == null) ? null : new BitRate((int)double.Round((double)FramesByTime.TotalSize * 8/* Byte/s => bit/s */ / (double)Duration)),
-                Max = (FramesByTime.MaxSize   == null) ? null : new BitRate((int)FramesByTime.MaxSize * 8/* Byte/s => bit/s */),
-                Min = (FramesByTime.MinSize   == null) ? null : new BitRate((int)FramesByTime.MinSize * 8/* Byte/s => bit/s */)
+                Avg = (FramesByTime.TotalSize == null) ? null : new BitRate((int)double.Round((double)FramesByTime.TotalSize / (double)Duration)),
+                Max = (FramesByTime.MaxSize   == null) ? null : new BitRate((int)FramesByTime.MaxSize),
+                Min = (FramesByTime.MinSize   == null) ? null : new BitRate((int)FramesByTime.MinSize)
             };
         }
 

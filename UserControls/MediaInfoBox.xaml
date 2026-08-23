@@ -39,7 +39,7 @@
                 <Setter Property="Padding" Value="2,2,0,2" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="FontWeight" Value="Normal" />
-                <Setter Property="Width" Value="110" />
+                <Setter Property="Width" Value="150" />
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <!-- <Setter Property="FontFamily" Value="Consolas" /> -->
             </Style>

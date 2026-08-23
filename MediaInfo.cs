@@ -178,32 +178,34 @@ namespace FFBitrateViewer
         }
 
 
-        public long GetValue()
+        public long GetValue(int multiplier = 1)
         {
-            return IsConvertToK() ? GetConvertedValue() : Value;
+            return (IsConvertToK() ? GetConvertedValue(multiplier) : multiplier * Value);
         }
 
 
-        public string GetUnit()
+        private string GetUnit(long value)
         {
-            return (IsConvertToK() ? GetConversionPrefix() : "") + (Unit ?? unitDefault);
+            return (IsConvertToK() ? GetConversionPrefix(value) : "") + (Unit ?? unitDefault);
         }
 
-        private string GetConversionPrefix()
+        private string GetConversionPrefix(long value)
         {
-            return (Value > 100000000) ? "M" : "k";
+            return (value > 100000000) ? "M" : "k";
         }
 
-        private long GetConvertedValue()
+        private long GetConvertedValue(int multiplier = 1)
         {
-            return (long)Math.Round((double)Value / (Value > 100000000 ? 1000000 : 1000));
+            var value = (double)Value * multiplier;
+            return (long)Math.Round(value / (value > 100000000 ? 1000000 : 1000));
         }
 
 
-        public virtual string ToString(char separator = ' ')
+        public virtual string ToString(int multiplier = 1)
         {
-            var unit  = GetUnit();
-            return GetValue().ToString() + (string.IsNullOrEmpty(unit) ? "" : separator + unit);
+            var value = GetValue(multiplier);
+            var unit  = GetUnit(multiplier * Value);
+            return value.ToString() + (string.IsNullOrEmpty(unit) ? "" : ' ' + unit);
         }
 
     }
@@ -636,6 +638,7 @@ namespace FFBitrateViewer
         public bool                 IsFilled        { get; set; } = false;
         public double?              Duration        { get; set; }
         public double               StartTime       { get; set; } = 0;
+        public double?              StartTimeRaw    { get; set; }
         public BitRate?             BitRate         { get; set; }
         public List<VideoStream>    VideoStreams    { get; set; }
         public List<AudioStream>    AudioStreams    { get; set; }
