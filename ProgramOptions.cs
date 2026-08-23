@@ -1,7 +1,7 @@
 //using Newtonsoft.Json;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 
 namespace FFBitrateViewer
@@ -40,7 +40,7 @@ namespace FFBitrateViewer
 
         public ProgramOptions()
         {
-            Files = new List<FileItemPO>();
+            Files = [];
         }
 
 
@@ -226,7 +226,13 @@ namespace FFBitrateViewer
                 }
             }
 
-            while (i < count) Files.Add(new FileItemPO(args[i++]));
+            var dir = Directory.GetCurrentDirectory();
+            while (i < count)
+            {
+                var fs = args[i++];
+                if (!Path.IsPathRooted(fs)) fs = Path.GetFullPath(dir + Path.DirectorySeparatorChar + fs);
+                Files.Add(new FileItemPO(fs));
+            }
         }
     }
 

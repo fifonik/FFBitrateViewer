@@ -36,7 +36,7 @@ namespace FFBitrateViewer
 
     public class ProgramConfig
     {
-        private static readonly string  DefaultVideoFilesList = "*.264;*.avi;*.avs;*.h264;*.hevc;*.m2ts;*.m4v;*.mkv;*.mov;*.mp4;*.mpeg;*.mpg;*.mts;*.mxf;*.ts;*.webm";
+        private static readonly string  DefaultVideoFilesList = "*.264;*.avi;*.avs;*.h264;*.hevc;*.m2ts;*.m4v;*.mkv;*.mov;*.mp4;*.mpeg;*.mpg;*.mts;*.mxf;*.ts;*.webm;*.wmv";
         private static readonly Regex   VideoFilesListRegexp  = new Regex(@"^(\*\.[a-z0-9]{1,}(?:$|;))+", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         private string                  _videoFilesList = DefaultVideoFilesList;
         public FFProbeFramesInfoConfig  FramesInfo     { get; set; } = new();

@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Utilities;
 
 namespace FFBitrateViewer
@@ -88,7 +88,7 @@ namespace FFBitrateViewer
                 }
             }
 
-            if (!string.IsNullOrEmpty(argsOptions.TempDir)) Global.SetTempDir(argsOptions.TempDir);
+            if (!string.IsNullOrEmpty(argsOptions?.TempDir)) Global.SetTempDir(argsOptions.TempDir);
 
             FF.Init(programConfig);
 
@@ -266,7 +266,7 @@ namespace FFBitrateViewer
                 RestoreDirectory = true,
                 OverwritePrompt  = true,
                 FilterIndex      = filterIndex,
-                DefaultExt       = ext,
+                //DefaultExt       = ext,
                 Title            = title
             };
             if (!string.IsNullOrEmpty(fs)) dlg.FileName = Path.GetFileName(fs);
@@ -365,7 +365,21 @@ namespace FFBitrateViewer
                 if (file == null) return;
 
                 dragFileSrcIndex = listviewFiles.SelectedIndex;
-                DragDrop.DoDragDrop(item, new DataObject("FileItem", file), DragDropEffects.Move);
+                //Dispatcher.BeginInvoke(new Action(() =>
+                //{
+                    try
+                    {
+                        DragDrop.DoDragDrop(item, new DataObject("FileItem", file), DragDropEffects.Move);
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Error occurred");
+                    }
+                    finally
+                    {
+                    dragFileSrcIndex = null;
+                }
+                //}), DispatcherPriority.Background);
             }
             else
             {
@@ -464,8 +478,7 @@ namespace FFBitrateViewer
         {
             if (Mouse.LeftButton == MouseButtonState.Released)
             {
-                var tb = sender as TextBox;
-                if (tb == null) return;
+                if (sender is not TextBox tb) return;
                 tb.SelectAll();
                 tb.Tag = true; // Use the tag propety to signal that the box is already focused
             }
@@ -474,8 +487,7 @@ namespace FFBitrateViewer
 
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            var tb = sender as TextBox;
-            if (tb == null) return;
+            if (sender is not TextBox tb) return;
             tb.SelectionLength = 0;
             tb.Tag = false; // Use the tag propety to signal that the box is already focused
 
@@ -486,8 +498,7 @@ namespace FFBitrateViewer
         {
             // If a user clicked in, want to select all text, unless they made a different selection...
             // So select all only if the textbox isn't already focused, and the user hasn't selected any text.
-            var tb = sender as TextBox;
-            if(tb == null) return;
+            if (sender is not TextBox tb) return;
             if ((tb.Tag == null || (bool)tb.Tag == false) && tb.SelectionLength == 0)
             {
                 tb.SelectAll();

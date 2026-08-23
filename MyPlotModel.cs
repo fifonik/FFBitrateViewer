@@ -67,21 +67,13 @@ namespace FFBitrateViewer
 
         public void LineStyleSet(string style)
         {
-            switch (style.ToUpper())
+            LineStyle = style.ToUpper() switch
             {
-                case "DASH":
-                    LineStyle = LineStyle.Dash;
-                    break;
-                case "DOT":
-                    LineStyle = LineStyle.Dot;
-                    break;
-                case "SOLID":
-                    LineStyle = LineStyle.Solid;
-                    break;
-                default:
-                    LineStyle = LineStyle.Solid; // todo@ exception
-                    break;
-            }
+                "DASH"  => LineStyle.Dash,
+                "DOT"   => LineStyle.Dot,
+                "SOLID" => LineStyle.Solid,
+                _       => LineStyle.Solid,// todo@ exception
+            };
         }
     }
 
@@ -102,7 +94,7 @@ namespace FFBitrateViewer
 
     public class PlotParams
     {
-        public List<SeriesParams> Series { get; set; } = new List<SeriesParams>();
+        public List<SeriesParams> Series { get; set; } = [];
     }
 
 
@@ -283,14 +275,16 @@ namespace FFBitrateViewer
 
         public void LineAnnotationAdd(double maxX, int y, string text, OxyColor color)
         {
-            var annotation = new LineAnnotation();
-            annotation.Type = LineAnnotationType.Horizontal;
-            annotation.TextVerticalAlignment = VerticalAlignment.Bottom;
-            annotation.TextLinePosition = 0.04;
-            annotation.Y = y;
-            annotation.MaximumX = maxX;
-            annotation.Color = color;
-            annotation.Text = text;
+            var annotation = new LineAnnotation
+            {
+                Type = LineAnnotationType.Horizontal,
+                TextVerticalAlignment = VerticalAlignment.Bottom,
+                TextLinePosition = 0.04,
+                Y = y,
+                MaximumX = maxX,
+                Color = color,
+                Text = text
+            };
             Annotations.Add(annotation);
         }
 
@@ -416,11 +410,16 @@ namespace FFBitrateViewer
 
         private bool IsSerieEmpty(Series serie)
         {
-            return ((StairStepSeries)serie).Points.Count == 0;
+            return !serie.IsVisible || ((StairStepSeries)serie).Points.Count == 0;
         }
 
 
-        public StairStepSeries SerieCreate(FileItem file, int? idx)
+        public void SerieAdd(FileItem file, int fileIndex) {
+            Series.Add(SerieCreate(file, fileIndex));
+        }
+
+
+        private StairStepSeries SerieCreate(FileItem file, int fileIndex)
         {
             var serie = new StairStepSeries
             {
@@ -433,31 +432,55 @@ namespace FFBitrateViewer
                 VerticalStrokeThickness = 0.5,
                 VerticalLineStyle       = LineStyle.Dash
             };
-            if (idx != null) SerieStyleApply(serie, PlotStyles[(int)idx]);
+            SerieStyleApply(serie, fileIndex);
             return serie;
         }
 
 
-        public StairStepSeries? SerieGet(int idx)
+        private StairStepSeries? SerieGet(int fileIndex)
         {
-            //return idx >=0 && idx < Series.Count ? (LineSeries)Series[idx] : null;
-            return idx >=0 && idx < Series.Count ? (StairStepSeries)Series[idx] : null;
+            var serieIndex = SerieIndexGet(fileIndex);
+            //return serieIndex >=0 && serieIndex < Series.Count ? (LineSeries)Series[serieIndex] : null;
+            return serieIndex >= 0 && serieIndex < Series.Count ? (StairStepSeries)Series[serieIndex] : null;
         }
 
 
-        public void SerieSet(int? idx, StairStepSeries? serie)
+        private int SerieIndexGet(int fileIndex)
         {
-            if (serie == null) return;
-            if (idx == null)
+            // todo@ in future 0 -- running average, fileSerieIndex = fileIndex + 1
+            return fileIndex;
+        }
+
+
+        public bool SerieMove(int fileIndexFrom, int fileIndexTo)
+        {
+            var serieFrom = SerieGet(fileIndexFrom);
+            if (serieFrom == null) return false;
+
+            if (fileIndexFrom < fileIndexTo)
             {
-                Series.Add(serie);
-                idx = Series.Count - 1;
+                for (var fileIndex = fileIndexFrom; fileIndex < fileIndexTo - 1; ++fileIndex) SerieSet(fileIndex, SerieGet(fileIndex + 1));
+                SerieSet(fileIndexTo - 1, serieFrom);
             }
             else
             {
-                Series[(int)idx] = serie;
+                for (var fileIndex = fileIndexFrom; fileIndex > fileIndexTo; --fileIndex) SerieSet(fileIndex, SerieGet(fileIndex - 1));
+                SerieSet(fileIndexTo, serieFrom);
             }
-            SerieStyleApply((int)idx);
+
+            return true;
+        }
+
+
+        public void SeriePointsAdd(int fileIndex, List<DataPoint> dataPoints)
+        {
+            SerieGet(fileIndex)?.Points.AddRange(dataPoints);
+        }
+
+
+        public void SeriePointsClear(int fileIndex)
+        {
+            SerieGet(fileIndex)?.Points.Clear();
         }
 
 
@@ -471,20 +494,25 @@ namespace FFBitrateViewer
         }
 
 
-        public void SeriePointsAdd(int idx, List<DataPoint> dataPoints)
+        public bool SerieRemove(int fileIndex)
         {
-            SerieGet(idx)?.Points.AddRange(dataPoints);
+            var serieIndex = SerieIndexGet(fileIndex);
+            if (serieIndex < 0 || serieIndex >= Series.Count) return false;
+            Series.RemoveAt(serieIndex);
+            return true;
         }
 
 
-        public void SeriePointsClear(int idx)
+        private void SerieSet(int fileIndex, StairStepSeries serie)
         {
-            SerieGet(idx)?.Points.Clear();
+            Series[SerieIndexGet(fileIndex)] = serie;
+            SerieStyleApply(serie, fileIndex);
         }
 
 
-        private static void SerieStyleApply(StairStepSeries serie, SerieStyle style)
+        private static void SerieStyleApply(StairStepSeries serie, int fileIndex)
         {
+            var style                = PlotStyles[fileIndex]; // todo@ check index
             serie.Color              = style.Color;
             serie.LineStyle          = style.LineStyle;
             serie.MarkerType         = style.MarkerType;
@@ -497,13 +525,14 @@ namespace FFBitrateViewer
         public void SerieStyleApply(int idx)
         {
             var serie = SerieGet(idx);
-            if(serie != null) SerieStyleApply(serie, PlotStyles[idx]); // todo@ check idx range
+            if(serie != null) SerieStyleApply(serie, idx);
         }
 
 
         public void PlotViewTypeSet(string plotViewType)
         {
             PlotViewType = plotViewType;
+            // todo@ do not apply for running average
             foreach (var serie in Series) serie.TrackerFormatString = TrackerFormatStringBuild();
         }
 
@@ -512,7 +541,7 @@ namespace FFBitrateViewer
         {
             return "{0}"
                 + System.Environment.NewLine + "Time={2:hh\\:mm\\:ss\\.fff}"
-                + System.Environment.NewLine + "{3}={4:0} " + AxisYUnitBuild(PlotViewType)
+                + System.Environment.NewLine + "{3}={4:0.0} " + AxisYUnitBuild(PlotViewType)
                 //+ AxisYAdditionalInfo(PlotViewType)
             ;
         }

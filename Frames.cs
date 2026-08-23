@@ -95,7 +95,7 @@ namespace FFBitrateViewer
         {
             List<DataPoint> data = [];
             data.Add(new DataPoint(StartTime - startTimeOffset, Size / sizeDivider));
-            if(isLast) data.Add(new DataPoint(EndTime - startTimeOffset, Size / sizeDivider));
+            if(isLast) data.Add(new DataPoint(EndTime - startTimeOffset, (double)Size / sizeDivider));
             return data;
         }
     }
@@ -103,10 +103,15 @@ namespace FFBitrateViewer
     public class GOP
     {
         private List<Frame> Frames              { get; set; } = [];
+#if DEBUG
+        private List<int>   FramesSizes         { get; set; } = []; // for debugging only: what size was added by the associated frame
+#endif
         public bool         IsEmpty             { get { return Frames.Count == 0; } }
         public  bool        IsRealGOP           { get { return FixedTimeDuration == null; } }
         public  int         Size                { get; private set; } = 0;
         public  int         BitRate             { get { return Duration == 0 ? 0 : (int)double.Round(Size / (double)Duration); } }
+        public double       EdgeStartTime       { get { return IsRealGOP ? FramesStartTime - StartTimeOffset : FixedTimeStartTime; } }
+        public double       EdgeEndTime         { get { return IsRealGOP ? FramesEndTime   - StartTimeOffset : FixedTimeEndTime;   } }
         public  double      StartTimeRaw        { get; private set; } = 0;
         public  double      StartTimeOffset     { get; private set; } = 0;
         public  double      StartTime           { get { return IsRealGOP ? FramesStartTime - StartTimeOffset : Math.Max(FixedTimeStartTime, FramesStartTime - StartTimeOffset); } }
@@ -153,13 +158,19 @@ namespace FFBitrateViewer
                 }
             }
             Frames.Add(frame);
-            SizeAdd(frame);
+            var size = SizeGet(frame);
+#if DEBUG
+            FramesSizes.Add(size);
+#endif
+            Size += size;
         }
 
 
-        private void SizeAdd(Frame frame)
+        private int SizeGet(Frame frame)
         {
-            Size += frame.GetSize(StartTime + StartTimeOffset, StartTime + StartTimeOffset + FixedTimeDuration);
+            // FixedTimeDuration is null for real GOPs (not by time GOP) and the 2nd param will become null. This will make the whole frame size to be accounted to the GOP size
+            //return frame.GetSize(StartTime + StartTimeOffset, StartTime + StartTimeOffset + FixedTimeDuration);
+            return frame.GetSize(EdgeStartTime + StartTimeOffset, EdgeStartTime + StartTimeOffset + FixedTimeDuration);
         }
 
 
@@ -301,8 +312,8 @@ namespace FFBitrateViewer
 
             foreach (var frame in Frames)
             {
-                // The frame is started in one of the next GOP, so finallizing current GOP and creating a new one
-                // It is possible that the frame if far away from prev GOP, so adding a number of GOPs if needed
+                // The frame is started in one of the next GOP, so finalizing current GOP and creating a new one
+                // It is possible that the frame if far away from current GOP, so adding more then one GOP if needed
                 while ((frame.StartTime - StartTimeOffset) >= gop.FixedTimeEndTime)
                 {
                     GOPs.Add(gop);
@@ -311,7 +322,8 @@ namespace FFBitrateViewer
 
                 gop.Add(frame);
 
-                // The frame is ended in one of the next GOPs, so finallizing current GOP and creating a new one
+                // The frame is not ending in current GOP, so finalizing current one and creating a new one
+                // It is possible that the frame will belongs to more then one GOP
                 while ((frame.EndTime - StartTimeOffset) > gop.FixedTimeEndTime)
                 {
                     GOPs.Add(gop);
@@ -387,6 +399,28 @@ namespace FFBitrateViewer
                 case "SECOND":
                     FramesByTime.Calc(startTimeOffset);
                     data.AddRange(FramesByTime.DataPointsGet(sizeDivider));
+                    break;
+            }
+            return data;
+        }
+
+
+        public List<DataPoint> RunningAverageDataPointsGet(string? plotViewType, int sizeDivider = 1000/* kilo */)
+        {
+            List<DataPoint> data = [];
+            var startTimeOffset = IsAdjustStartTime ? StartTime : 0;
+            switch (plotViewType?.ToUpper() ?? "")
+            {
+                case "FRAME":
+                    for (var frameIndex = 0; frameIndex < FramesList.Count; ++frameIndex) data.AddRange(FramesList[frameIndex].DataPointGet(startTimeOffset, frameIndex == FramesList.Count - 1, 10000));
+                    break;
+                case "GOP":
+                    FramesByGOP.Calc(startTimeOffset);
+                    data.AddRange(FramesByGOP.DataPointsGet(10000));
+                    break;
+                case "SECOND":
+                    FramesByTime.Calc(startTimeOffset);
+                    data.AddRange(FramesByTime.DataPointsGet(10000));
                     break;
             }
             return data;
