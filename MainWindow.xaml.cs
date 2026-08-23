@@ -129,7 +129,7 @@ namespace FFBitrateViewer
                     {
                         Application.Current.Dispatcher.Invoke(delegate
                         {
-                            vm.ExitCmd.Execute(null);
+                            vm.ExitCmd?.Execute(null);
                         });
                     }
                 },

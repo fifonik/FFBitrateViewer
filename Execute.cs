@@ -60,6 +60,8 @@ namespace FFBitrateViewer
 
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError  = true;
+                    process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+                    process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
                     try
                     {
